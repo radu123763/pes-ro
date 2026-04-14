@@ -503,7 +503,7 @@ async function loadUsers(){
       const zonaBadge=u.zona&&u.zona!=='ALL'?'<div class="u-zona" style="background:'+(zonaC[u.zona]||['#eee','#333'])[0]+';color:'+(zonaC[u.zona]||['#eee','#333'])[1]+'">Zona '+u.zona+'</div>':'';
       return '<div class="u-card" onclick=\'loginUser('+JSON.stringify(u)+')\' '+(isDir?'style="grid-column:1/-1"':'')+'>'+
         '<div class="avatar" style="background:'+bg+';color:'+col+';width:38px;height:38px;font-size:13px">'+u.initiale+'</div>'+
-        '<div class="u-name">'+u.nome+'</div>'+
+        '<div class="u-name">'+u.nume+'</div>'+
         '<div class="u-role">'+(roleLabel[u.rol]||u.rol)+'</div>'+
         zonaBadge+'</div>';
     }).join('');
@@ -515,7 +515,7 @@ async function loadUsers(){
 }
 
 async function loginUser(u){
-  cU=u.nome;cR=u.rol;cZ=u.zona;cA=u.atelier;
+  cU=u.nume;cR=u.rol;cZ=u.zona;cA=u.atelier;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('sc-'+u.rol).classList.add('active');
   const avMap={disponent:'d-av',sef:'sef-av',piesar:'p-av',gestionar:'g-av',manager:'mgr-av'};
@@ -525,7 +525,7 @@ async function loginUser(u){
   if(avMap[u.rol]){
     const [bg,col]=colors[u.rol]||['#eee','#333'];
     const av=document.getElementById(avMap[u.rol]);av.style.background=bg;av.style.color=col;av.textContent=u.initiale;
-    document.getElementById(unMap[u.rol]).textContent=u.nome;
+    document.getElementById(unMap[u.rol]).textContent=u.nume;
     const uz=document.getElementById(uzMap[u.rol]);
     if(uz&&u.zona&&u.zona!=='ALL'){uz.textContent='Zona '+u.zona;uz.style.background=u.zona==='SUD'?'#E1F5EE':'#E6F1FB';uz.style.color=u.zona==='SUD'?'#085041':'#0C447C';}
   }
