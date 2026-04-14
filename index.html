@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PES RO — PORR Equipment Services</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a18;font-size:14px}
@@ -62,17 +61,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .u-name{font-size:13px;font-weight:600;color:#1a1a18}
 .u-role{font-size:11px;color:#888}
 .u-zona{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500}
-.sort-bar{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:12px;color:#888}
-.sort-btn{font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer;border:1px solid #d0cfc8;background:#fff;color:#888;font-family:inherit}
-.sort-btn.active{background:#f5f5f3;color:#1a1a18;border-color:#999;font-weight:600}
 .notif-info{background:#f5f5f3;border-radius:8px;padding:10px 12px;margin-bottom:10px;border:1px solid #e8e7e2}
 .tl-item{display:flex;gap:8px;align-items:flex-start;font-size:12px;margin-bottom:7px}
 .tl-dot{width:10px;height:10px;border-radius:50%;margin-top:2px;flex-shrink:0}
 .dot-done{background:#1D9E75}.dot-now{background:#D85A30}.dot-wait{background:#ccc}
 .loading{text-align:center;padding:2rem;color:#888;font-size:13px}
-.toast{position:fixed;bottom:20px;right:20px;background:#1a1a18;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s}
+.toast{position:fixed;bottom:20px;right:20px;background:#1a1a18;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
-@media(max-width:640px){.metrics{grid-template-columns:repeat(2,1fr)}.u-grid{grid-template-columns:repeat(2,1fr)}.fg{grid-template-columns:1fr}.fg3{grid-template-columns:1fr}}
+.sort-bar{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:12px;color:#888}
+.sort-btn{font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer;border:1px solid #d0cfc8;background:#fff;color:#888;font-family:inherit}
+.sort-btn.active{background:#f5f5f3;color:#1a1a18;border-color:#999;font-weight:600}
 </style>
 </head>
 <body>
@@ -115,16 +113,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="sec-title">Notificările mele</div>
         <div style="overflow-x:auto"><table class="tbl">
           <thead><tr>
-            <th style="width:115px">Nr. notificare</th>
-            <th style="width:105px">Echipament</th>
-            <th style="width:100px">Locație</th>
-            <th style="width:70px">Atelier</th>
-            <th style="width:60px">Clasif.</th>
-            <th style="width:82px">Deschis</th>
-            <th style="width:82px">Termen</th>
-            <th style="width:75px">Work order</th>
-            <th style="width:105px">Status</th>
-            <th style="width:62px"></th>
+            <th style="width:115px">Nr. notificare</th><th style="width:105px">Echipament</th><th style="width:100px">Locație</th>
+            <th style="width:70px">Atelier</th><th style="width:60px">Clasif.</th><th style="width:82px">Deschis</th>
+            <th style="width:82px">Termen</th><th style="width:75px">Work order</th><th style="width:105px">Status</th><th style="width:62px"></th>
           </tr></thead>
           <tbody id="d-tbody"><tr><td colspan="10" class="loading">Se încarcă...</td></tr></tbody>
         </table></div>
@@ -138,7 +129,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="fgrp"><label>Data deschiderii *</label><input type="date" id="f-data" oninput="calcLimita()"></div>
           <div class="fgrp"><label>Nr. inventar echipament *</label><input id="f-inv" placeholder="ex: INV-0234" oninput="lookupEQ(this.value)"></div>
           <div class="fgrp"><label>Atelier raportat *</label><select id="f-atelier"><option value="">— selectează —</option></select></div>
-          <div class="fgrp"><label>Locația echipamentului *</label><input id="f-locatie" placeholder="ex: Șantier A1 km 34, jud. Ilfov"></div>
+          <div class="fgrp"><label>Locația echipamentului *</label><input id="f-locatie" placeholder="ex: Șantier A1 km 34"></div>
           <div class="fgrp"><label>Clasificare defect *</label>
             <select id="f-cls">
               <option value="">— selectează —</option>
@@ -147,7 +138,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
               <option value="52">52 — defect hidraulic</option>
             </select>
           </div>
-          <div class="fgrp fg1"><label>Descriere succintă defect *</label><textarea id="f-desc" placeholder="Descrie pe scurt defectul observat..."></textarea></div>
+          <div class="fgrp fg1"><label>Descriere succintă defect *</label><textarea id="f-desc" placeholder="Descrie pe scurt defectul..."></textarea></div>
         </div>
         <div id="eq-auto" style="display:none;margin-bottom:10px">
           <div style="font-size:11px;color:#888;margin-bottom:5px;font-weight:500">Preluate automat din baza de date</div>
@@ -197,7 +188,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
     <div id="sef-tab-noi">
       <div class="card">
-        <div class="sec-title">Notificări noi — de evaluat tipul reparației</div>
+        <div class="sec-title">Notificări noi — de evaluat</div>
         <div style="overflow-x:auto"><table class="tbl">
           <thead><tr>
             <th style="width:115px">Nr. notificare</th><th style="width:80px">Disponent</th><th style="width:105px">Echipament</th>
@@ -240,7 +231,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="fg">
             <div class="fgrp"><label>Service care a efectuat reparația *</label><input id="ext-service-final" placeholder="ex: Auto Expert SRL"></div>
             <div class="fgrp"><label>Data finalizării *</label><input type="date" id="ext-data-final"></div>
-            <div class="fgrp fg1"><label>Observații / lucrări efectuate</label><textarea id="ext-obs-final" placeholder="Descrie lucrările efectuate..."></textarea></div>
+            <div class="fgrp fg1"><label>Observații / lucrări efectuate</label><textarea id="ext-obs-final"></textarea></div>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
             <input type="checkbox" id="ext-bifa" style="width:16px;height:16px;cursor:pointer">
@@ -295,8 +286,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="fgrp"><label>Tip reparație *</label>
             <select id="sef-tip" onchange="toggleSefTip(this.value)">
               <option value="">— decide tipul —</option>
-              <option value="intern">Reparație internă (atelier propriu)</option>
-              <option value="extern">Reparație externă (service autorizat)</option>
+              <option value="intern">Reparație internă</option>
+              <option value="extern">Reparație externă (service)</option>
             </select>
           </div>
         </div>
@@ -453,11 +444,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://zrxqglvxhtrsmaeaozvx.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyeHFnbHZ4aHRyc21hZWFvenZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3ODI2MjAsImV4cCI6MjA5MTM1ODYyMH0.b1reHkSXvLABlu9bYX1msV091QRPYm5CCauX0PuQ2dg';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const URL = 'https://zrxqglvxhtrsmaeaozvx.supabase.co/rest/v1';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyeHFnbHZ4aHRyc21hZWFvenZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3ODI2MjAsImV4cCI6MjA5MTM1ODYyMH0.b1reHkSXvLABlu9bYX1msV091QRPYm5CCauX0PuQ2dg';
 
-const ECHIP_DB = {
+const H = {'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+
+async function dbGet(table, params=''){
+  const r = await fetch(URL+'/'+table+'?'+params, {headers:H});
+  return r.json();
+}
+
+async function dbInsert(table, data){
+  const r = await fetch(URL+'/'+table, {method:'POST', headers:H, body:JSON.stringify(data)});
+  return r.json();
+}
+
+async function dbUpdate(table, id, data){
+  const r = await fetch(URL+'/'+table+'?id=eq.'+id, {method:'PATCH', headers:{...H,'Prefer':'return=minimal'}, body:JSON.stringify(data)});
+  return r.ok;
+}
+
+const ECHIP = {
   'INV-0234':{marca:'Caterpillar',model:'320D',an:'2018',sasiu:'CAT0320DCAB123456'},
   'INV-0112':{marca:'Komatsu',model:'D65EX',an:'2019',sasiu:'KOM065EX987654321'},
   'INV-0341':{marca:'Liebherr',model:'LTM 1050',an:'2016',sasiu:'LIE050LTM456789012'},
@@ -468,41 +475,47 @@ const ECHIP_DB = {
 const SL={la_sef:'La șef atelier',intern_piesar:'La piesar',intern_gestionar:'La gestionar',intern_receptie:'Piese pregătite',extern_service:'La service extern',programat:'Programat',inchis:'Închis tehnic'};
 const SB={la_sef:'b-sef',intern_piesar:'b-piese',intern_gestionar:'b-piese',intern_receptie:'b-gestionar',extern_service:'b-extern',programat:'b-programat',inchis:'b-inchis'};
 
-let cU=null,cR=null,cZ=null,cAtelier=null,editId=null,extEditId=null,sortProg='locatie';
-let allNotif=[];
+let cU=null,cR=null,cZ=null,cA=null,editId=null,extId=null,sortProg='locatie',allNotif=[];
 
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.style.background=ok?'#1a1a18':'#A32D2D';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
-function sbadge(s){return `<span class="badge ${SB[s]||''}">${SL[s]||s}</span>`;}
+function sbadge(s){return '<span class="badge '+(SB[s]||'b-sef')+'">'+(SL[s]||s)+'</span>';}
 function clsL(c){return c==='02'?'02 mec.':c==='05'?'05 elec.':c==='52'?'52 hidr.':c;}
 function isOD(n){return new Date(n.data_limita)<new Date()&&n.status!=='inchis';}
 function days(d){return Math.round((new Date()-new Date(d))/86400000);}
 function addD(d,n){const dt=new Date(d);dt.setDate(dt.getDate()+n);return dt.toISOString().split('T')[0];}
-function tipBadge(t){return t==='intern'?'<span class="badge b-piese">Internă</span>':t==='extern'?'<span class="badge b-extern">Externă</span>':'<span style="color:#ccc">—</span>';}
+function tipB(t){return t==='intern'?'<span class="badge b-piese">Internă</span>':t==='extern'?'<span class="badge b-extern">Externă</span>':'<span style="color:#ccc">—</span>';}
+function empty(cols,msg){return '<tr><td colspan="'+cols+'" style="text-align:center;color:#aaa;padding:1.5rem">'+msg+'</td></tr>';}
 
 async function loadUsers(){
-  const {data,error}=await sb.from('utilizatori').select('*').order('id');
-  if(error){document.getElementById('login-loading').textContent='Eroare la încărcare. Verifică conexiunea.';return;}
-  const grid=document.getElementById('u-grid');
-  const colors={disponent:['#E6F1FB','#0C447C'],sef:['#FAEEDA','#633806'],piesar:['#EEEDFE','#3C3489'],gestionar:['#EAF3DE','#27500A'],manager:['#FAECE7','#712B13'],director:['#D85A30','#fff']};
-  const roleLabel={disponent:'Disponent',sef:'Șef atelier',piesar:'Piesar',gestionar:'Gestionar',manager:'Manager zonă',director:'Director PES RO'};
-  const zonaColors={SUD:['#E1F5EE','#085041'],VEST:['#E6F1FB','#0C447C'],ALL:['#f5f5f3','#444']};
-  grid.innerHTML=data.map(u=>{
-    const [bg,col]=colors[u.rol]||['#eee','#333'];
-    const [zbg,zcol]=zonaColors[u.zona]||['#eee','#333'];
-    const isDir=u.rol==='director';
-    return `<div class="u-card" onclick="login(${JSON.stringify(u)})" ${isDir?'style="grid-column:1/-1"':''}>
-      <div class="avatar" style="background:${bg};color:${col};width:38px;height:38px;font-size:13px">${u.initiale}</div>
-      <div class="u-name">${u.nome||u.nume}</div>
-      <div class="u-role">${roleLabel[u.rol]||u.rol}</div>
-      ${u.zona&&u.zona!=='ALL'?`<div class="u-zona" style="background:${zbg};color:${zcol}">Zona ${u.zona}</div>`:''}
-    </div>`;
-  }).join('');
-  document.getElementById('login-loading').style.display='none';
-  grid.style.display='grid';
+  try {
+    const data = await dbGet('utilizatori','order=id');
+    if(!Array.isArray(data)){
+      document.getElementById('login-loading').textContent='Eroare conexiune Supabase. Verifică setările.';
+      return;
+    }
+    const roleLabel={disponent:'Disponent',sef:'Șef atelier',piesar:'Piesar',gestionar:'Gestionar',manager:'Manager zonă',director:'Director PES RO'};
+    const colors={disponent:['#E6F1FB','#0C447C'],sef:['#FAEEDA','#633806'],piesar:['#EEEDFE','#3C3489'],gestionar:['#EAF3DE','#27500A'],manager:['#FAECE7','#712B13'],director:['#D85A30','#fff']};
+    const zonaC={SUD:['#E1F5EE','#085041'],VEST:['#E6F1FB','#0C447C']};
+    const grid=document.getElementById('u-grid');
+    grid.innerHTML=data.map(u=>{
+      const [bg,col]=colors[u.rol]||['#eee','#333'];
+      const isDir=u.rol==='director';
+      const zonaBadge=u.zona&&u.zona!=='ALL'?'<div class="u-zona" style="background:'+(zonaC[u.zona]||['#eee','#333'])[0]+';color:'+(zonaC[u.zona]||['#eee','#333'])[1]+'">Zona '+u.zona+'</div>':'';
+      return '<div class="u-card" onclick=\'loginUser('+JSON.stringify(u)+')\' '+(isDir?'style="grid-column:1/-1"':'')+'>'+
+        '<div class="avatar" style="background:'+bg+';color:'+col+';width:38px;height:38px;font-size:13px">'+u.initiale+'</div>'+
+        '<div class="u-name">'+u.nome+'</div>'+
+        '<div class="u-role">'+(roleLabel[u.rol]||u.rol)+'</div>'+
+        zonaBadge+'</div>';
+    }).join('');
+    document.getElementById('login-loading').style.display='none';
+    grid.style.display='grid';
+  } catch(e) {
+    document.getElementById('login-loading').textContent='Eroare: '+e.message;
+  }
 }
 
-async function login(u){
-  cU=u.nume;cR=u.rol;cZ=u.zona;cAtelier=u.atelier;
+async function loginUser(u){
+  cU=u.nome;cR=u.rol;cZ=u.zona;cA=u.atelier;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('sc-'+u.rol).classList.add('active');
   const avMap={disponent:'d-av',sef:'sef-av',piesar:'p-av',gestionar:'g-av',manager:'mgr-av'};
@@ -512,9 +525,9 @@ async function login(u){
   if(avMap[u.rol]){
     const [bg,col]=colors[u.rol]||['#eee','#333'];
     const av=document.getElementById(avMap[u.rol]);av.style.background=bg;av.style.color=col;av.textContent=u.initiale;
-    document.getElementById(unMap[u.rol]).textContent=u.nume;
+    document.getElementById(unMap[u.rol]).textContent=u.nome;
     const uz=document.getElementById(uzMap[u.rol]);
-    if(uz&&u.zona){uz.textContent='Zona '+u.zona;uz.style.background=u.zona==='SUD'?'#E1F5EE':'#E6F1FB';uz.style.color=u.zona==='SUD'?'#085041':'#0C447C';}
+    if(uz&&u.zona&&u.zona!=='ALL'){uz.textContent='Zona '+u.zona;uz.style.background=u.zona==='SUD'?'#E1F5EE':'#E6F1FB';uz.style.color=u.zona==='SUD'?'#085041':'#0C447C';}
   }
   await loadNotif();
   renderRole();
@@ -523,14 +536,13 @@ async function login(u){
 function logout(){allNotif=[];document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('sc-login').classList.add('active');}
 
 async function loadNotif(){
-  const {data,error}=await sb.from('notificari').select('*').order('created_at',{ascending:false});
-  if(!error)allNotif=data||[];
+  const data=await dbGet('notificari','order=created_at.desc');
+  allNotif=Array.isArray(data)?data:[];
 }
 
 function renderRole(){
   if(cR==='disponent'){
-    const sel=document.getElementById('f-atelier');
-    sel.innerHTML=`<option value="">— selectează —</option><option value="${cAtelier}">${cAtelier}</option>`;
+    document.getElementById('f-atelier').innerHTML='<option value="">— selectează —</option><option value="'+cA+'">'+cA+'</option>';
     const t=new Date().toISOString().split('T')[0];
     document.getElementById('f-data').value=t;calcLimita();
     dTab('list');
@@ -551,7 +563,7 @@ function dTab(t){
 }
 
 function lookupEQ(v){
-  const eq=ECHIP_DB[v.toUpperCase()];
+  const eq=ECHIP[v.toUpperCase()];
   if(eq){document.getElementById('eq-auto').style.display='block';document.getElementById('af-marca').textContent=eq.marca;document.getElementById('af-model').textContent=eq.model;document.getElementById('af-an').textContent=eq.an;document.getElementById('af-sasiu').textContent=eq.sasiu;}
   else document.getElementById('eq-auto').style.display='none';
 }
@@ -571,14 +583,12 @@ async function salveazaNotif(){
   const loc=document.getElementById('f-locatie').value.trim();
   const cls=document.getElementById('f-cls').value;
   const desc=document.getElementById('f-desc').value.trim();
-  if(!nr||!inv||!dd||!atelier||!loc||!cls||!desc){toast('Completează toate câmpurile obligatorii!',false);return;}
-  const eq=ECHIP_DB[inv]||{marca:'—',model:'—',an:'—',sasiu:'—'};
+  if(!nr||!inv||!dd||!atelier||!loc||!cls||!desc){toast('Completează toate câmpurile *',false);return;}
+  const eq=ECHIP[inv]||{marca:'—',model:'—',an:'—',sasiu:'—'};
   const zona=atelier.includes('SUD')?'SUD':'VEST';
-  const rec={id:nr,zona,atelier,disponent:cU,nr_inventar:inv,marca:eq.marca,model:eq.model,an:eq.an,sasiu:eq.sasiu,clasificare:cls,descriere:desc,locatie:loc,data_deschidere:dd,data_limita:addD(dd,14),status:'la_sef'};
-  const {error}=await sb.from('notificari').insert(rec);
-  if(error){toast('Eroare la salvare: '+error.message,false);return;}
-  toast('Notificare trimisă la șef atelier!');
-  await loadNotif();dTab('list');
+  const ok=await dbInsert('notificari',{id:nr,zona,atelier,disponent:cU,nr_inventar:inv,marca:eq.marca,model:eq.model,an:eq.an,sasiu:eq.sasiu,clasificare:cls,descriere:desc,locatie:loc,data_deschidere:dd,data_limita:addD(dd,14),status:'la_sef'});
+  if(ok&&ok[0]){toast('Notificare trimisă la șef atelier!');await loadNotif();dTab('list');}
+  else toast('Eroare la salvare!',false);
 }
 
 function renderDisponent(){
@@ -587,19 +597,19 @@ function renderDisponent(){
   document.getElementById('dm-sef').textContent=mine.filter(n=>n.status==='la_sef').length;
   document.getElementById('dm-curs').textContent=mine.filter(n=>['intern_piesar','intern_gestionar','intern_receptie','extern_service','programat'].includes(n.status)).length;
   document.getElementById('dm-dep').textContent=mine.filter(n=>isOD(n)).length;
-  document.getElementById('d-tbody').innerHTML=mine.length?mine.map(n=>`
-    <tr class="${isOD(n)?'urg':''}">
-      <td style="font-size:11px">${n.id}</td>
-      <td style="font-size:11px">${n.marca} ${n.model}<br><span style="color:#aaa">${n.nr_inventar}</span></td>
-      <td style="font-size:11px">${n.locatie}</td>
-      <td style="font-size:11px">${n.atelier}</td>
-      <td>${clsL(n.clasificare)}</td>
-      <td>${n.data_deschidere}</td>
-      <td class="${isOD(n)?'overdue':''}">${n.data_limita}</td>
-      <td style="font-size:11px">${n.work_order||'<span style="color:#ccc">—</span>'}</td>
-      <td>${sbadge(n.status)}</td>
-      <td><button class="btn btn-sm" onclick="showTL('${n.id}')">Timeline</button></td>
-    </tr>`).join(''):'<tr><td colspan="10" style="text-align:center;color:#aaa;padding:1.5rem">Nicio notificare</td></tr>';
+  document.getElementById('d-tbody').innerHTML=mine.length?mine.map(n=>
+    '<tr class="'+(isOD(n)?'urg':'')+'">'+
+    '<td style="font-size:11px">'+n.id+'</td>'+
+    '<td style="font-size:11px">'+n.marca+' '+n.model+'<br><span style="color:#aaa">'+n.nr_inventar+'</span></td>'+
+    '<td style="font-size:11px">'+n.locatie+'</td>'+
+    '<td style="font-size:11px">'+n.atelier+'</td>'+
+    '<td>'+clsL(n.clasificare)+'</td>'+
+    '<td>'+n.data_deschidere+'</td>'+
+    '<td class="'+(isOD(n)?'overdue':'')+'">'+n.data_limita+'</td>'+
+    '<td style="font-size:11px">'+(n.work_order||'<span style="color:#ccc">—</span>')+'</td>'+
+    '<td>'+sbadge(n.status)+'</td>'+
+    '<td><button class="btn btn-sm" onclick="showTL(\''+n.id+'\')">Timeline</button></td>'+
+    '</tr>').join(''):empty(10,'Nicio notificare');
 }
 
 function showTL(id){
@@ -607,28 +617,29 @@ function showTL(id){
   const isExt=n.tip_rep==='extern';
   const steps=isExt?[
     {s:'la_sef',l:'Notificare trimisă la '+n.atelier},
-    {s:'extern_service',l:'Șef atelier → reparație externă: '+(n.service_extern||'service extern')},
+    {s:'extern_service',l:'Reparație externă: '+(n.service_extern||'—')},
     {s:'inchis',l:'Închis tehnic (reparat de: '+(n.service_final||'—')+')'},
   ]:[
     {s:'la_sef',l:'Notificare trimisă la '+n.atelier},
-    {s:'intern_piesar',l:'Șef atelier → reparație internă, la piesar'},
-    {s:'intern_gestionar',l:'Piesar: piese comandate, la gestionar'},
-    {s:'intern_receptie',l:'Gestionar: piese recepționate și pregătite'},
-    {s:'programat',l:'Șef atelier: reparație programată'},
+    {s:'intern_piesar',l:'Șef atelier → la piesar'},
+    {s:'intern_gestionar',l:'Piesar: piese comandate'},
+    {s:'intern_receptie',l:'Gestionar: piese pregătite'},
+    {s:'programat',l:'Șef atelier: programat'},
     {s:'inchis',l:'Închis tehnic'},
   ];
   const order=['la_sef','intern_piesar','extern_service','intern_gestionar','intern_receptie','programat','inchis'];
   const ci=order.indexOf(n.status);
-  let html=`<div style="font-weight:600;font-size:13px;margin-bottom:6px">${n.id}</div>
-    <div style="font-size:12px;color:#888;margin-bottom:4px">${n.marca} ${n.model} — ${n.locatie}</div>`;
-  if(n.work_order)html+=`<div style="font-size:12px;margin-bottom:8px">Work order: <strong>${n.work_order}</strong></div>`;
+  let html='<div style="font-weight:600;font-size:13px;margin-bottom:6px">'+n.id+'</div>'+
+    '<div style="font-size:12px;color:#888;margin-bottom:4px">'+n.marca+' '+n.model+' — '+n.locatie+'</div>';
+  if(n.work_order)html+='<div style="font-size:12px;margin-bottom:8px">Work order: <strong>'+n.work_order+'</strong></div>';
   steps.forEach(st=>{
     const done=order.indexOf(st.s)<=ci;const active=st.s===n.status;
-    html+=`<div class="tl-item"><div class="tl-dot ${active?'dot-now':done?'dot-done':'dot-wait'}"></div><div style="font-size:12px;color:${active?'#1a1a18':done?'#666':'#ccc'}">${st.l}</div></div>`;
+    html+='<div class="tl-item"><div class="tl-dot '+(active?'dot-now':done?'dot-done':'dot-wait')+'"></div>'+
+      '<div style="font-size:12px;color:'+(active?'#1a1a18':done?'#666':'#ccc')+'">'+st.l+'</div></div>';
   });
   const panel=document.createElement('div');
   panel.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:999';
-  panel.innerHTML=`<div style="background:#fff;border-radius:14px;padding:1.5rem;max-width:420px;width:92%;border:1px solid #e8e7e2">${html}<button class="btn btn-sm" style="margin-top:14px" onclick="this.closest('[style*=fixed]').remove()">Închide</button></div>`;
+  panel.innerHTML='<div style="background:#fff;border-radius:14px;padding:1.5rem;max-width:420px;width:92%;border:1px solid #e8e7e2">'+html+'<button class="btn btn-sm" style="margin-top:14px" onclick="this.closest(\'[style*=fixed]\').remove()">Închide</button></div>';
   document.body.appendChild(panel);
 }
 
@@ -644,41 +655,41 @@ function sefTab(t){
 }
 
 function renderSef(){
-  const zona=allNotif.filter(n=>n.atelier===cAtelier);
+  const zona=allNotif.filter(n=>n.atelier===cA);
   document.getElementById('sm-noi').textContent=zona.filter(n=>n.status==='la_sef').length;
   document.getElementById('sm-int').textContent=zona.filter(n=>['intern_piesar','intern_gestionar','intern_receptie'].includes(n.status)).length;
   document.getElementById('sm-ext').textContent=zona.filter(n=>n.status==='extern_service').length;
   document.getElementById('sm-prog').textContent=zona.filter(n=>n.status==='intern_receptie').length;
 
   const noi=zona.filter(n=>n.status==='la_sef');
-  document.getElementById('sef-tbody-noi').innerHTML=noi.length?noi.map(n=>`
-    <tr class="${isOD(n)?'urg':''}">
-      <td style="font-size:11px">${n.id}</td><td style="font-size:11px">${n.disponent.split(' ')[0]}</td>
-      <td style="font-size:11px">${n.marca} ${n.model}</td><td style="font-size:11px">${n.locatie}</td>
-      <td>${clsL(n.clasificare)}</td><td style="font-size:11px">${n.descriere}</td>
-      <td class="${isOD(n)?'overdue':''}">${n.data_limita}</td>
-      <td><button class="btn btn-sm btn-p" onclick="openSefEval('${n.id}')">Evaluează</button></td>
-    </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;color:#aaa;padding:1.5rem">Nicio notificare nouă</td></tr>';
+  document.getElementById('sef-tbody-noi').innerHTML=noi.length?noi.map(n=>
+    '<tr class="'+(isOD(n)?'urg':'')+'">'+
+    '<td style="font-size:11px">'+n.id+'</td><td style="font-size:11px">'+n.disponent.split(' ')[0]+'</td>'+
+    '<td style="font-size:11px">'+n.marca+' '+n.model+'</td><td style="font-size:11px">'+n.locatie+'</td>'+
+    '<td>'+clsL(n.clasificare)+'</td><td style="font-size:11px">'+n.descriere+'</td>'+
+    '<td class="'+(isOD(n)?'overdue':'')+'">'+n.data_limita+'</td>'+
+    '<td><button class="btn btn-sm btn-p" onclick="openSefEval(\''+n.id+'\')">Evaluează</button></td>'+
+    '</tr>').join(''):empty(8,'Nicio notificare nouă');
 
   const active=zona.filter(n=>n.status!=='inchis');
-  document.getElementById('sef-tbody-active').innerHTML=active.length?active.map(n=>`
-    <tr class="${isOD(n)?'urg':''}">
-      <td style="font-size:11px">${n.id}</td><td style="font-size:11px">${n.disponent.split(' ')[0]}</td>
-      <td style="font-size:11px">${n.marca} ${n.model}</td><td style="font-size:11px">${n.locatie}</td>
-      <td>${tipBadge(n.tip_rep)}</td><td class="${isOD(n)?'overdue':''}">${n.data_limita}</td>
-      <td style="font-size:11px">${n.work_order||'—'}</td><td>${sbadge(n.status)}</td>
-      <td style="text-align:center;${isOD(n)?'color:#A32D2D;font-weight:600':''}">${days(n.data_deschidere)}</td>
-    </tr>`).join(''):'<tr><td colspan="9" style="text-align:center;color:#aaa;padding:1.5rem">Nicio notificare activă</td></tr>';
+  document.getElementById('sef-tbody-active').innerHTML=active.length?active.map(n=>
+    '<tr class="'+(isOD(n)?'urg':'')+'">'+
+    '<td style="font-size:11px">'+n.id+'</td><td style="font-size:11px">'+n.disponent.split(' ')[0]+'</td>'+
+    '<td style="font-size:11px">'+n.marca+' '+n.model+'</td><td style="font-size:11px">'+n.locatie+'</td>'+
+    '<td>'+tipB(n.tip_rep)+'</td><td class="'+(isOD(n)?'overdue':'')+'">'+n.data_limita+'</td>'+
+    '<td style="font-size:11px">'+(n.work_order||'—')+'</td><td>'+sbadge(n.status)+'</td>'+
+    '<td style="text-align:center;'+(isOD(n)?'color:#A32D2D;font-weight:600':'')+'">'+days(n.data_deschidere)+'</td>'+
+    '</tr>').join(''):empty(9,'Nicio notificare activă');
 
   const ext=zona.filter(n=>n.status==='extern_service');
-  document.getElementById('sef-tbody-ext').innerHTML=ext.length?ext.map(n=>`
-    <tr class="${isOD(n)?'urg':''}">
-      <td style="font-size:11px">${n.id}</td><td style="font-size:11px">${n.marca} ${n.model}</td>
-      <td style="font-size:11px">${n.locatie}</td><td style="font-size:11px">${n.service_extern||'—'}</td>
-      <td>${n.data_ext_sent||'—'}</td><td class="${isOD(n)?'overdue':''}">${n.data_est_ret||'—'}</td>
-      <td>${sbadge(n.status)}</td>
-      <td><button class="btn btn-sm btn-g" onclick="openExtClose('${n.id}')">Finalizează</button></td>
-    </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;color:#aaa;padding:1.5rem">Nicio reparație externă activă</td></tr>';
+  document.getElementById('sef-tbody-ext').innerHTML=ext.length?ext.map(n=>
+    '<tr class="'+(isOD(n)?'urg':'')+'">'+
+    '<td style="font-size:11px">'+n.id+'</td><td style="font-size:11px">'+n.marca+' '+n.model+'</td>'+
+    '<td style="font-size:11px">'+n.locatie+'</td><td style="font-size:11px">'+(n.service_extern||'—')+'</td>'+
+    '<td>'+(n.data_ext_sent||'—')+'</td><td class="'+(isOD(n)?'overdue':'')+'">'+n.data_est_ret+'</td>'+
+    '<td>'+sbadge(n.status)+'</td>'+
+    '<td><button class="btn btn-sm btn-g" onclick="openExtClose(\''+n.id+'\')">Finalizează</button></td>'+
+    '</tr>').join(''):empty(8,'Nicio reparație externă activă');
 
   renderProgTab();
 }
@@ -686,40 +697,31 @@ function renderSef(){
 function setSortProg(s){
   sortProg=s;
   ['loc','disp','ter'].forEach(x=>document.getElementById('sort-'+x).classList.remove('active'));
-  const map={locatie:'loc',disponent:'disp',termen:'ter'};
-  document.getElementById('sort-'+(map[s]||'loc')).classList.add('active');
+  document.getElementById('sort-'+(s==='locatie'?'loc':s==='disponent'?'disp':'ter')).classList.add('active');
   renderProgTab();
 }
 
 function renderProgTab(){
-  const zona=allNotif.filter(n=>n.atelier===cAtelier&&['intern_receptie','programat'].includes(n.status));
-  const sorted=[...zona].sort((a,b)=>{
-    if(sortProg==='locatie')return (a.locatie||'').localeCompare(b.locatie||'');
-    if(sortProg==='disponent')return (a.disponent||'').localeCompare(b.disponent||'');
-    return new Date(a.data_limita)-new Date(b.data_limita);
-  });
-  document.getElementById('sef-tbody-prog').innerHTML=sorted.length?sorted.map(n=>`
-    <tr>
-      <td style="font-size:11px">${n.id}</td><td style="font-size:11px">${n.locatie}</td>
-      <td style="font-size:11px">${n.disponent.split(' ')[0]}</td><td style="font-size:11px">${n.marca} ${n.model}</td>
-      <td style="font-size:11px">${n.descriere}</td><td>${n.data_receptie||'—'}</td>
-      <td>${n.data_programare||'<span style="color:#ccc">—</span>'}</td>
-      <td style="font-size:11px">${n.mecanic||'—'}</td><td>${sbadge(n.status)}</td>
-      <td>${n.status==='intern_receptie'?`<button class="btn btn-sm btn-p" onclick="openSefProg('${n.id}')">Programează</button>`:n.status==='programat'?`<button class="btn btn-sm btn-g" onclick="inchideDir('${n.id}')">Închide</button>`:''}</td>
-    </tr>`).join(''):'<tr><td colspan="10" style="text-align:center;color:#aaa;padding:1.5rem">Nicio notificare de programat</td></tr>';
+  const zona=allNotif.filter(n=>n.atelier===cA&&['intern_receptie','programat'].includes(n.status));
+  const sorted=[...zona].sort((a,b)=>sortProg==='locatie'?(a.locatie||'').localeCompare(b.locatie||''):sortProg==='disponent'?(a.disponent||'').localeCompare(b.disponent||''):new Date(a.data_limita)-new Date(b.data_limita));
+  document.getElementById('sef-tbody-prog').innerHTML=sorted.length?sorted.map(n=>
+    '<tr>'+
+    '<td style="font-size:11px">'+n.id+'</td><td style="font-size:11px">'+n.locatie+'</td>'+
+    '<td style="font-size:11px">'+n.disponent.split(' ')[0]+'</td><td style="font-size:11px">'+n.marca+' '+n.model+'</td>'+
+    '<td style="font-size:11px">'+n.descriere+'</td><td>'+(n.data_receptie||'—')+'</td>'+
+    '<td>'+(n.data_programare||'<span style="color:#ccc">—</span>')+'</td>'+
+    '<td style="font-size:11px">'+(n.mecanic||'—')+'</td><td>'+sbadge(n.status)+'</td>'+
+    '<td>'+(n.status==='intern_receptie'?'<button class="btn btn-sm btn-p" onclick="openSefProg(\''+n.id+'\')">Programează</button>':n.status==='programat'?'<button class="btn btn-sm btn-g" onclick="inchideDir(\''+n.id+'\')">Închide</button>':'')+'</td>'+
+    '</tr>').join(''):empty(10,'Nicio notificare de programat');
 }
 
 function openExtClose(id){
-  extEditId=id;const n=allNotif.find(x=>x.id===id);
+  extId=id;const n=allNotif.find(x=>x.id===id);
   document.getElementById('ext-panel-title').textContent='Finalizare externă — '+n.id;
-  document.getElementById('ext-panel-info').innerHTML=`<div class="fg3" style="font-size:12px">
-    <div><div class="af-label">Echipament</div><strong>${n.marca} ${n.model}</strong></div>
-    <div><div class="af-label">Work order</div>${n.work_order||'—'}</div>
-    <div><div class="af-label">Termen</div><span class="${isOD(n)?'overdue':''}">${n.data_limita}</span></div>
-    <div><div class="af-label">Service trimis</div>${n.service_extern||'—'}</div>
-    <div><div class="af-label">Trimis pe</div>${n.data_ext_sent||'—'}</div>
-    <div><div class="af-label">Est. returnare</div>${n.data_est_ret||'—'}</div>
-  </div>`;
+  document.getElementById('ext-panel-info').innerHTML='<div class="fg3" style="font-size:12px">'+
+    '<div><div class="af-label">Echipament</div><strong>'+n.marca+' '+n.model+'</strong></div>'+
+    '<div><div class="af-label">Work order</div>'+(n.work_order||'—')+'</div>'+
+    '<div><div class="af-label">Service trimis</div>'+(n.service_extern||'—')+'</div></div>';
   document.getElementById('ext-service-final').value=n.service_extern||'';
   document.getElementById('ext-data-final').value='';
   document.getElementById('ext-obs-final').value='';
@@ -733,25 +735,20 @@ async function finalizeazaExtern(){
   const service=document.getElementById('ext-service-final').value.trim();
   const data=document.getElementById('ext-data-final').value;
   if(!service||!data){toast('Completează service-ul și data!',false);return;}
-  const {error}=await sb.from('notificari').update({status:'inchis',service_final:service,data_finalizare_ext:data,obs_ext:document.getElementById('ext-obs-final').value,data_inchidere:data}).eq('id',extEditId);
-  if(error){toast('Eroare: '+error.message,false);return;}
-  toast('Reparație externă închisă tehnic!');
-  document.getElementById('ext-close-panel').style.display='none';
-  await loadNotif();renderSef();
+  const ok=await dbUpdate('notificari',extId,{status:'inchis',service_final:service,data_finalizare_ext:data,obs_ext:document.getElementById('ext-obs-final').value,data_inchidere:data});
+  if(ok){toast('Reparație externă închisă tehnic!');document.getElementById('ext-close-panel').style.display='none';await loadNotif();renderSef();}
+  else toast('Eroare!',false);
 }
 
 function openSefEval(id){
   editId=id;const n=allNotif.find(x=>x.id===id);
   document.getElementById('sef-eval-title').textContent='Evaluare — '+n.id;
-  document.getElementById('sef-eval-info').innerHTML=`<div class="fg3" style="font-size:12px">
-    <div><div class="af-label">Echipament</div><strong>${n.marca} ${n.model} (${n.an})</strong></div>
-    <div><div class="af-label">Nr. inventar</div>${n.nr_inventar}</div>
-    <div><div class="af-label">Clasificare</div>${clsL(n.clasificare)}</div>
-    <div class="fg1"><div class="af-label">Defect</div>${n.descriere}</div>
-    <div class="fg1"><div class="af-label">Locație</div>${n.locatie}</div>
-    <div><div class="af-label">Disponent</div>${n.disponent}</div>
-    <div><div class="af-label">Termen</div><span class="${isOD(n)?'overdue':''}">${n.data_limita}</span></div>
-  </div>`;
+  document.getElementById('sef-eval-info').innerHTML='<div class="fg3" style="font-size:12px">'+
+    '<div><div class="af-label">Echipament</div><strong>'+n.marca+' '+n.model+' ('+n.an+')</strong></div>'+
+    '<div><div class="af-label">Clasificare</div>'+clsL(n.clasificare)+'</div>'+
+    '<div><div class="af-label">Termen</div><span class="'+(isOD(n)?'overdue':'')+'">'+n.data_limita+'</span></div>'+
+    '<div class="fg1"><div class="af-label">Defect</div>'+n.descriere+'</div>'+
+    '<div class="fg1"><div class="af-label">Locație</div>'+n.locatie+'</div></div>';
   document.getElementById('sef-tip').selectedIndex=0;
   document.getElementById('sef-ext-fields').style.display='none';
   document.getElementById('sef-eval-panel').style.display='block';
@@ -770,17 +767,15 @@ async function salveazaSefEval(){
     update.data_ext_sent=document.getElementById('sef-data-ext').value||null;
     update.data_est_ret=document.getElementById('sef-data-ret').value||null;
   }
-  const {error}=await sb.from('notificari').update(update).eq('id',editId);
-  if(error){toast('Eroare: '+error.message,false);return;}
-  toast(tip==='intern'?'Trimis la piesar!':'Trimis la service extern!');
-  document.getElementById('sef-eval-panel').style.display='none';
-  await loadNotif();renderSef();
+  const ok=await dbUpdate('notificari',editId,update);
+  if(ok){toast(tip==='intern'?'Trimis la piesar!':'Trimis la service extern!');document.getElementById('sef-eval-panel').style.display='none';await loadNotif();renderSef();}
+  else toast('Eroare!',false);
 }
 
 function openSefProg(id){
   editId=id;const n=allNotif.find(x=>x.id===id);
   document.getElementById('prog-panel-title').textContent='Programare — '+n.id;
-  document.getElementById('prog-panel-info').innerHTML=`<div style="font-size:12px"><strong>${n.marca} ${n.model}</strong> — ${n.descriere}<br>Disponent: ${n.disponent} | Locație: ${n.locatie} | Piese recep.: ${n.data_receptie||'—'}</div>`;
+  document.getElementById('prog-panel-info').innerHTML='<div style="font-size:12px"><strong>'+n.marca+' '+n.model+'</strong> — '+n.descriere+'<br>Disponent: '+n.disponent+' | Locație: '+n.locatie+'</div>';
   document.getElementById('sef-data-prog').value='';
   document.getElementById('sef-mecanic').value='';
   document.getElementById('sef-obs').value='';
@@ -790,58 +785,50 @@ function openSefProg(id){
 }
 
 async function programeaza(){
-  const {error}=await sb.from('notificari').update({status:'programat',data_programare:document.getElementById('sef-data-prog').value||null,mecanic:document.getElementById('sef-mecanic').value,obs_tehnice:document.getElementById('sef-obs').value}).eq('id',editId);
-  if(error){toast('Eroare: '+error.message,false);return;}
-  toast('Reparație programată!');
-  document.getElementById('btn-inchide-sef').style.display='inline-block';
-  await loadNotif();renderSef();
+  const ok=await dbUpdate('notificari',editId,{status:'programat',data_programare:document.getElementById('sef-data-prog').value||null,mecanic:document.getElementById('sef-mecanic').value,obs_tehnice:document.getElementById('sef-obs').value});
+  if(ok){toast('Reparație programată!');document.getElementById('btn-inchide-sef').style.display='inline-block';await loadNotif();renderSef();}
+  else toast('Eroare!',false);
 }
 
 async function inchideSef(){
-  const today=new Date().toISOString().split('T')[0];
-  const {error}=await sb.from('notificari').update({status:'inchis',data_inchidere:today}).eq('id',editId);
-  if(error){toast('Eroare: '+error.message,false);return;}
-  toast('Notificare închisă tehnic!');
-  document.getElementById('sef-prog-panel').style.display='none';
-  await loadNotif();renderSef();
+  const ok=await dbUpdate('notificari',editId,{status:'inchis',data_inchidere:new Date().toISOString().split('T')[0]});
+  if(ok){toast('Închis tehnic!');document.getElementById('sef-prog-panel').style.display='none';await loadNotif();renderSef();}
+  else toast('Eroare!',false);
 }
 
 async function inchideDir(id){
-  const today=new Date().toISOString().split('T')[0];
-  const {error}=await sb.from('notificari').update({status:'inchis',data_inchidere:today}).eq('id',id);
-  if(error){toast('Eroare: '+error.message,false);return;}
-  toast('Notificare închisă tehnic!');
-  await loadNotif();renderSef();
+  const ok=await dbUpdate('notificari',id,{status:'inchis',data_inchidere:new Date().toISOString().split('T')[0]});
+  if(ok){toast('Închis tehnic!');await loadNotif();renderSef();}
+  else toast('Eroare!',false);
 }
 
 function renderPiesar(){
-  const actv=allNotif.filter(n=>n.atelier===cAtelier&&['intern_piesar','intern_gestionar'].includes(n.status));
+  const actv=allNotif.filter(n=>n.atelier===cA&&['intern_piesar','intern_gestionar'].includes(n.status));
   document.getElementById('pm-noi').textContent=actv.filter(n=>n.status==='intern_piesar').length;
   document.getElementById('pm-cmd').textContent=actv.filter(n=>n.status==='intern_gestionar').length;
   document.getElementById('pm-dep').textContent=actv.filter(n=>isOD(n)).length;
   document.getElementById('pm-tot').textContent=actv.length;
-  document.getElementById('p-tbody').innerHTML=actv.length?actv.map(n=>`
-    <tr class="${isOD(n)?'urg':''}">
-      <td style="font-size:11px">${n.id}</td>
-      <td style="font-size:11px">${n.marca} ${n.model}<br><span style="color:#aaa">${n.nr_inventar}</span></td>
-      <td style="font-size:11px">${n.locatie}</td><td>${clsL(n.clasificare)}</td>
-      <td style="font-size:11px">${n.descriere}</td>
-      <td class="${isOD(n)?'overdue':''}">${n.data_limita}</td>
-      <td>${sbadge(n.status)}</td>
-      <td>${n.status==='intern_piesar'?`<button class="btn btn-sm btn-p" onclick="openP('${n.id}')">Comandă piese</button>`:''}</td>
-    </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;color:#aaa;padding:1.5rem">Nicio notificare de procesat</td></tr>';
+  document.getElementById('p-tbody').innerHTML=actv.length?actv.map(n=>
+    '<tr class="'+(isOD(n)?'urg':'')+'">'+
+    '<td style="font-size:11px">'+n.id+'</td>'+
+    '<td style="font-size:11px">'+n.marca+' '+n.model+'<br><span style="color:#aaa">'+n.nr_inventar+'</span></td>'+
+    '<td style="font-size:11px">'+n.locatie+'</td><td>'+clsL(n.clasificare)+'</td>'+
+    '<td style="font-size:11px">'+n.descriere+'</td>'+
+    '<td class="'+(isOD(n)?'overdue':'')+'">'+n.data_limita+'</td>'+
+    '<td>'+sbadge(n.status)+'</td>'+
+    '<td>'+(n.status==='intern_piesar'?'<button class="btn btn-sm btn-p" onclick="openP(\''+n.id+'\')">Comandă piese</button>':'')+'</td>'+
+    '</tr>').join(''):empty(8,'Nicio notificare de procesat');
 }
 
 function openP(id){
   editId=id;const n=allNotif.find(x=>x.id===id);
   document.getElementById('p-panel-title').textContent='Comandă piese — '+n.id;
-  document.getElementById('p-panel-info').innerHTML=`<div class="fg3" style="font-size:12px">
-    <div><div class="af-label">Echipament</div><strong>${n.marca} ${n.model}</strong></div>
-    <div><div class="af-label">Serie șasiu</div>${n.sasiu}</div>
-    <div><div class="af-label">Clasificare</div>${clsL(n.clasificare)}</div>
-    <div class="fg1"><div class="af-label">Defect</div>${n.descriere}</div>
-    <div class="fg1"><div class="af-label">Locație</div>${n.locatie}</div>
-  </div>`;
+  document.getElementById('p-panel-info').innerHTML='<div class="fg3" style="font-size:12px">'+
+    '<div><div class="af-label">Echipament</div><strong>'+n.marca+' '+n.model+'</strong></div>'+
+    '<div><div class="af-label">Serie șasiu</div>'+n.sasiu+'</div>'+
+    '<div><div class="af-label">Clasificare</div>'+clsL(n.clasificare)+'</div>'+
+    '<div class="fg1"><div class="af-label">Defect</div>'+n.descriere+'</div>'+
+    '<div class="fg1"><div class="af-label">Locație</div>'+n.locatie+'</div></div>';
   ['p-stoc','p-furn','p-dcmd','p-dliv','p-wo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['pg-furn','pg-dcmd','pg-dliv'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('p-panel').style.display='block';
@@ -851,41 +838,34 @@ function openP(id){
 function toggleStoc(v){['pg-furn','pg-dcmd','pg-dliv'].forEach(id=>document.getElementById(id).style.display=v==='nu'?'block':'none');}
 
 async function salveazaPiesar(){
-  const stoc=document.getElementById('p-stoc').value;
-  const wo=document.getElementById('p-wo').value;
+  const stoc=document.getElementById('p-stoc').value;const wo=document.getElementById('p-wo').value;
   if(!stoc||!wo){toast('Completează stocul și work order-ul!',false);return;}
-  const update={work_order:wo,status:'intern_gestionar',furnizor:stoc==='da'?'Stoc intern':document.getElementById('p-furn').value,data_comanda:stoc==='da'?new Date().toISOString().split('T')[0]:(document.getElementById('p-dcmd').value||null),data_est_livrare:stoc==='da'?null:(document.getElementById('p-dliv').value||null)};
-  const {error}=await sb.from('notificari').update(update).eq('id',editId);
-  if(error){toast('Eroare: '+error.message,false);return;}
-  toast('Trimis la gestionar!');
-  document.getElementById('p-panel').style.display='none';
-  await loadNotif();renderPiesar();
+  const ok=await dbUpdate('notificari',editId,{work_order:wo,status:'intern_gestionar',furnizor:stoc==='da'?'Stoc intern':document.getElementById('p-furn').value,data_comanda:stoc==='da'?new Date().toISOString().split('T')[0]:(document.getElementById('p-dcmd').value||null),data_est_livrare:stoc==='da'?null:(document.getElementById('p-dliv').value||null)});
+  if(ok){toast('Trimis la gestionar!');document.getElementById('p-panel').style.display='none';await loadNotif();renderPiesar();}
+  else toast('Eroare!',false);
 }
 
 function renderGestionar(){
-  const actv=allNotif.filter(n=>n.atelier===cAtelier&&['intern_gestionar','intern_receptie'].includes(n.status));
-  document.getElementById('g-tbody').innerHTML=actv.length?actv.map(n=>`
-    <tr>
-      <td style="font-size:11px">${n.id}</td>
-      <td style="font-size:11px">${n.marca} ${n.model}</td>
-      <td style="font-size:11px">${n.furnizor||'—'}</td>
-      <td>${n.data_comanda||'—'}</td>
-      <td>${n.data_est_livrare||'—'}</td>
-      <td><input type="date" style="font-size:11px;width:128px;padding:4px 6px;border:1px solid #d0cfc8;border-radius:6px" value="${n.data_receptie||''}" onchange="setRec('${n.id}',this.value)"></td>
-      <td style="text-align:center"><input type="checkbox" style="width:16px;height:16px;cursor:pointer" ${n.status==='intern_receptie'?'checked':''} onchange="setPreg('${n.id}',this.checked)"></td>
-    </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:1.5rem">Nicio piesă în livrare</td></tr>';
+  const actv=allNotif.filter(n=>n.atelier===cA&&['intern_gestionar','intern_receptie'].includes(n.status));
+  document.getElementById('g-tbody').innerHTML=actv.length?actv.map(n=>
+    '<tr>'+
+    '<td style="font-size:11px">'+n.id+'</td><td style="font-size:11px">'+n.marca+' '+n.model+'</td>'+
+    '<td style="font-size:11px">'+(n.furnizor||'—')+'</td><td>'+(n.data_comanda||'—')+'</td>'+
+    '<td>'+(n.data_est_livrare||'—')+'</td>'+
+    '<td><input type="date" style="font-size:11px;width:128px;padding:4px 6px;border:1px solid #d0cfc8;border-radius:6px" value="'+(n.data_receptie||'')+'" onchange="setRec(\''+n.id+'\',this.value)"></td>'+
+    '<td style="text-align:center"><input type="checkbox" style="width:16px;height:16px;cursor:pointer" '+(n.status==='intern_receptie'?'checked':'')+' onchange="setPreg(\''+n.id+'\',this.checked)"></td>'+
+    '</tr>').join(''):empty(7,'Nicio piesă în livrare');
 }
 
 async function setRec(id,v){
-  await sb.from('notificari').update({data_receptie:v||null}).eq('id',id);
+  await dbUpdate('notificari',id,{data_receptie:v||null});
   const n=allNotif.find(x=>x.id===id);if(n)n.data_receptie=v;
 }
 
 async function setPreg(id,c){
-  const {error}=await sb.from('notificari').update({status:c?'intern_receptie':'intern_gestionar'}).eq('id',id);
-  if(error){toast('Eroare: '+error.message,false);return;}
-  if(c)toast('Piese marcate ca pregătite — revine la șef atelier!');
-  await loadNotif();renderGestionar();
+  const ok=await dbUpdate('notificari',id,{status:c?'intern_receptie':'intern_gestionar'});
+  if(ok){if(c)toast('Piese pregătite — revine la șef atelier!');await loadNotif();renderGestionar();}
+  else toast('Eroare!',false);
 }
 
 function renderManager(){
@@ -894,39 +874,34 @@ function renderManager(){
   document.getElementById('mm-dep').textContent=zona.filter(n=>isOD(n)).length;
   document.getElementById('mm-ext').textContent=zona.filter(n=>n.status==='extern_service').length;
   document.getElementById('mm-inch').textContent=zona.filter(n=>n.status==='inchis').length;
-  document.getElementById('mgr-tbody').innerHTML=zona.length?zona.map(n=>`
-    <tr class="${isOD(n)?'urg':''}">
-      <td style="font-size:11px">${n.id}</td>
-      <td style="font-size:11px">${n.disponent.split(' ')[0]}</td>
-      <td style="font-size:11px">${n.marca} ${n.model}</td>
-      <td style="font-size:11px">${n.locatie}</td>
-      <td>${tipBadge(n.tip_rep)}</td>
-      <td class="${isOD(n)?'overdue':''}">${n.data_limita}</td>
-      <td style="font-size:11px">${n.work_order||'—'}</td>
-      <td>${sbadge(n.status)}</td>
-      <td style="text-align:center;${isOD(n)?'color:#A32D2D;font-weight:600':''}">${days(n.data_deschidere)}</td>
-    </tr>`).join(''):'<tr><td colspan="9" style="text-align:center;color:#aaa;padding:1.5rem">Nicio notificare</td></tr>';
+  document.getElementById('mgr-tbody').innerHTML=zona.length?zona.map(n=>
+    '<tr class="'+(isOD(n)?'urg':'')+'">'+
+    '<td style="font-size:11px">'+n.id+'</td><td style="font-size:11px">'+n.disponent.split(' ')[0]+'</td>'+
+    '<td style="font-size:11px">'+n.marca+' '+n.model+'</td><td style="font-size:11px">'+n.locatie+'</td>'+
+    '<td>'+tipB(n.tip_rep)+'</td><td class="'+(isOD(n)?'overdue':'')+'">'+n.data_limita+'</td>'+
+    '<td style="font-size:11px">'+(n.work_order||'—')+'</td><td>'+sbadge(n.status)+'</td>'+
+    '<td style="text-align:center;'+(isOD(n)?'color:#A32D2D;font-weight:600':'')+'">'+days(n.data_deschidere)+'</td>'+
+    '</tr>').join(''):empty(9,'Nicio notificare');
 }
 
 function renderDirector(){
-  const all=allNotif;
-  document.getElementById('dir-tot').textContent=all.filter(n=>n.status!=='inchis').length;
-  document.getElementById('dir-dep').textContent=all.filter(n=>isOD(n)).length;
-  document.getElementById('dir-ext').textContent=all.filter(n=>n.status==='extern_service').length;
-  const closed=all.filter(n=>n.status==='inchis'&&n.data_inchidere&&n.data_deschidere);
+  document.getElementById('dir-tot').textContent=allNotif.filter(n=>n.status!=='inchis').length;
+  document.getElementById('dir-dep').textContent=allNotif.filter(n=>isOD(n)).length;
+  document.getElementById('dir-ext').textContent=allNotif.filter(n=>n.status==='extern_service').length;
+  const closed=allNotif.filter(n=>n.status==='inchis'&&n.data_inchidere&&n.data_deschidere);
   if(closed.length){const avg=closed.reduce((s,n)=>(s+(new Date(n.data_inchidere)-new Date(n.data_deschidere))/86400000),0)/closed.length;document.getElementById('dir-med').textContent=Math.round(avg);}
-  document.getElementById('dir-tbody').innerHTML=all.length?all.map(n=>`
-    <tr class="${isOD(n)?'urg':''}">
-      <td style="font-size:11px">${n.id}</td>
-      <td><span class="badge" style="background:${n.zona==='SUD'?'#E1F5EE':'#E6F1FB'};color:${n.zona==='SUD'?'#085041':'#0C447C'}">${n.zona}</span></td>
-      <td style="font-size:11px">${n.disponent.split(' ')[0]}</td>
-      <td style="font-size:11px">${n.marca} ${n.model}</td>
-      <td style="font-size:11px">${n.locatie}</td>
-      <td>${tipBadge(n.tip_rep)}</td>
-      <td class="${isOD(n)?'overdue':''}">${n.data_limita}</td>
-      <td>${sbadge(n.status)}</td>
-      <td style="text-align:center;${isOD(n)?'color:#A32D2D;font-weight:600':''}">${days(n.data_deschidere)}</td>
-    </tr>`).join(''):'<tr><td colspan="9" style="text-align:center;color:#aaa;padding:1.5rem">Nicio notificare</td></tr>';
+  document.getElementById('dir-tbody').innerHTML=allNotif.length?allNotif.map(n=>
+    '<tr class="'+(isOD(n)?'urg':'')+'">'+
+    '<td style="font-size:11px">'+n.id+'</td>'+
+    '<td><span class="badge" style="background:'+(n.zona==='SUD'?'#E1F5EE':'#E6F1FB')+';color:'+(n.zona==='SUD'?'#085041':'#0C447C')+'">'+n.zona+'</span></td>'+
+    '<td style="font-size:11px">'+n.disponent.split(' ')[0]+'</td>'+
+    '<td style="font-size:11px">'+n.marca+' '+n.model+'</td>'+
+    '<td style="font-size:11px">'+n.locatie+'</td>'+
+    '<td>'+tipB(n.tip_rep)+'</td>'+
+    '<td class="'+(isOD(n)?'overdue':'')+'">'+n.data_limita+'</td>'+
+    '<td>'+sbadge(n.status)+'</td>'+
+    '<td style="text-align:center;'+(isOD(n)?'color:#A32D2D;font-weight:600':'')+'">'+days(n.data_deschidere)+'</td>'+
+    '</tr>').join(''):empty(9,'Nicio notificare');
 }
 
 loadUsers();
