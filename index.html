@@ -334,7 +334,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <tbody id="p-tbody"><tr><td colspan="8" class="loading">Se încarcă...</td></tr></tbody>
       </table></div>
     </div>
-    <div id="p-panel" style="display:none">
+    <div id="p-istoric" style="display:none">
+    <div class="card">
+      <div class="sec-title">Istoric comenzi piese</div>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr>
+          <th style="width:115px">Nr. notificare</th>
+          <th style="width:105px">Echipament</th>
+          <th style="width:90px">Nr. PO</th>
+          <th style="width:88px">Data PO</th>
+          <th style="width:100px">Furnizor</th>
+          <th style="width:88px">Data cmd.</th>
+          <th style="width:95px">Est. livrare</th>
+          <th style="width:180px">Observații</th>
+          <th style="width:100px">Status</th>
+        </tr></thead>
+        <tbody id="p-istoric-tbody"><tr><td colspan="9" class="loading">Se încarcă...</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+  <div id="p-panel" style="display:none">
       <div class="card">
         <div class="sec-title" id="p-panel-title">Comandă piese</div>
         <div class="notif-info" id="p-panel-info"></div>
@@ -347,6 +366,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             </select>
           </div>
           <div class="fgrp"><label>Nr. work order *</label><input id="p-wo" placeholder="ex: WO-2026-0089"></div>
+          <div class="fgrp"><label>Nr. PO (Purchase Order) *</label><input id="p-nr-po" placeholder="ex: PO-2026-0123"></div>
+          <div class="fgrp"><label>Data PO *</label><input type="date" id="p-data-po"></div>
+          <div class="fgrp fg1"><label>Observații comandă (piese, cantități, etc.)</label><textarea id="p-obs-cmd" placeholder="ex: Garnitură hidraulică x2, oring set x1..."></textarea></div>
           <div class="fgrp" id="pg-furn" style="display:none"><label>Furnizor</label><input id="p-furn" placeholder="ex: Hidro Tech SRL"></div>
           <div class="fgrp" id="pg-dcmd" style="display:none"><label>Data reală comandă</label><input type="date" id="p-dcmd"></div>
           <div class="fgrp" id="pg-dliv" style="display:none"><label>Data estimată livrare</label><input type="date" id="p-dliv"></div>
