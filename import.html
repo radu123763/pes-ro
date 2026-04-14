@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PES RO — Import SAP</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a18;font-size:14px}
+.wrap{max-width:960px;margin:0 auto;padding:1.5rem}
+.topbar{background:#fff;border-bottom:1px solid #e8e7e2;padding:.7rem 1.5rem;display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+.brand{background:#D85A30;color:#fff;font-size:13px;font-weight:700;padding:5px 12px;border-radius:7px;letter-spacing:.5px}
+.title{font-size:14px;font-weight:500}
+.card{background:#fff;border:1px solid #e8e7e2;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.sec-title{font-size:13px;font-weight:600;margin-bottom:12px;color:#1a1a18}
+.btn{font-family:inherit;font-size:13px;padding:8px 18px;border-radius:8px;cursor:pointer;border:1px solid #d0cfc8;background:#fff;color:#1a1a18;transition:all .15s}
+.btn:hover{background:#f5f5f3}
+.btn-p{background:#D85A30;color:#fff;border:none}
+.btn-p:hover{background:#c04e28}
+.btn-g{background:#1D9E75;color:#fff;border:none}
+.btn-g:hover{background:#177a5c}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.drop-zone{border:2px dashed #d0cfc8;border-radius:12px;padding:2.5rem;text-align:center;cursor:pointer;transition:all .2s;background:#fafaf8}
+.drop-zone:hover,.drop-zone.drag{border-color:#D85A30;background:#FEF0EB}
+.drop-zone input{display:none}
+.drop-icon{font-size:32px;margin-bottom:.75rem;color:#D85A30}
+.drop-title{font-size:15px;font-weight:500;margin-bottom:4px}
+.drop-sub{font-size:12px;color:#888}
+.progress-bar{height:6px;background:#e8e7e2;border-radius:3px;overflow:hidden;margin:.75rem 0}
+.progress-fill{height:100%;background:#D85A30;border-radius:3px;transition:width .3s;width:0%}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:.75rem 0}
+.stat{background:#f5f5f3;border-radius:8px;padding:.6rem .9rem}
+.stat-label{font-size:11px;color:#888;margin-bottom:2px}
+.stat-val{font-size:20px;font-weight:600}
+.stat-val.green{color:#1D9E75}
+.stat-val.orange{color:#D85A30}
+.stat-val.red{color:#A32D2D}
+.tbl{width:100%;font-size:12px;border-collapse:collapse;table-layout:fixed}
+.tbl th{text-align:left;color:#888;font-weight:500;padding:6px 8px;border-bottom:1px solid #e8e7e2;font-size:11px}
+.tbl td{padding:6px 8px;border-bottom:1px solid #f0efe8;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500}
+.b-done{background:#EAF3DE;color:#27500A}
+.b-proc{background:#E6F1FB;color:#0C447C}
+.b-new{background:#FAEEDA;color:#854F0B}
+.b-ov{background:#FCEBEB;color:#791F1F}
+.b-imp{background:#EEEDFE;color:#3C3489}
+.b-skip{background:#F1EFE8;color:#444}
+.log{background:#f5f5f3;border-radius:8px;padding:.75rem;font-size:11px;font-family:monospace;max-height:200px;overflow-y:auto;line-height:1.8;color:#444;border:1px solid #e8e7e2}
+.log .ok{color:#1D9E75}
+.log .warn{color:#D85A30}
+.log .err{color:#A32D2D}
+.info-box{background:#E6F1FB;border-radius:8px;padding:.75rem 1rem;font-size:12px;color:#0C447C;border-left:3px solid #378ADD;margin-bottom:1rem}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">PES RO</div>
+  <div class="title">Import SAP — Work Orders</div>
+  <div style="margin-left:auto;font-size:12px;color:#888" id="last-import-info">Niciun import recent</div>
+</div>
+
+<div class="wrap">
+  <div class="info-box">
+    Acest modul importă automat datele din Excelul generat din SAP. Notificările existente se actualizează, cele noi se adaugă. Datele introduse manual de piesar și gestionar (PO, recepție piese) nu se suprascriu.
+  </div>
+
+  <div class="card">
+    <div class="sec-title">Pas 1 — Încarcă fișierul Excel din SAP</div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleDrop(event)">
+      <input type="file" id="file-input" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+      <div class="drop-icon">&#8682;</div>
+      <div class="drop-title">Trage fișierul Excel aici sau click pentru a selecta</div>
+      <div class="drop-sub">Fișier .xlsx generat din SAP — sheet "Work Orders"</div>
+    </div>
+    <div id="file-info" style="display:none;margin-top:.75rem;font-size:12px;color:#888"></div>
+  </div>
+
+  <div class="card" id="preview-card" style="display:none">
+    <div class="sec-title">Pas 2 — Previzualizare date importate</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Total rânduri</div><div class="stat-val" id="st-total">0</div></div>
+      <div class="stat"><div class="stat-label">De importat</div><div class="stat-val orange" id="st-import">0</div></div>
+      <div class="stat"><div class="stat-label">Deja existente</div><div class="stat-val" id="st-exist">0</div></div>
+      <div class="stat"><div class="stat-label">Închise (skip)</div><div class="stat-val" id="st-skip">0</div></div>
+    </div>
+    <div style="overflow-x:auto;margin-bottom:1rem">
+      <table class="tbl">
+        <thead><tr>
+          <th style="width:100px">Notificare</th>
+          <th style="width:75px">WO</th>
+          <th style="width:110px">Echipament</th>
+          <th style="width:120px">Locație</th>
+          <th style="width:110px">Disponent</th>
+          <th style="width:80px">Start</th>
+          <th style="width:80px">Termen</th>
+          <th style="width:60px">Cod</th>
+          <th style="width:90px">Status SAP</th>
+          <th style="width:75px">Acțiune</th>
+        </tr></thead>
+        <tbody id="preview-tbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-g" id="btn-import" onclick="doImport()">Importă în baza de date</button>
+      <button class="btn" onclick="resetImport()">Anulează</button>
+      <span style="font-size:12px;color:#888" id="import-count-label"></span>
+    </div>
+  </div>
+
+  <div class="card" id="result-card" style="display:none">
+    <div class="sec-title">Rezultat import</div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+    <div style="font-size:12px;color:#888;margin-bottom:.75rem" id="prog-label">Se procesează...</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Adăugate</div><div class="stat-val green" id="res-add">0</div></div>
+      <div class="stat"><div class="stat-label">Actualizate</div><div class="stat-val orange" id="res-upd">0</div></div>
+      <div class="stat"><div class="stat-label">Erori</div><div class="stat-val red" id="res-err">0</div></div>
+      <div class="stat"><div class="stat-label">Ignorate</div><div class="stat-val" id="res-skip">0</div></div>
+    </div>
+    <div class="log" id="import-log"></div>
+    <div style="margin-top:1rem;display:flex;gap:8px">
+      <button class="btn btn-p" onclick="resetImport()">Import nou</button>
+      <a href="https://radu123763.github.io/pes-ro" class="btn btn-g" style="text-decoration:none;display:inline-flex;align-items:center">Mergi la aplicație</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://zrxqglvxhtrsmaeaozvx.supabase.co/rest/v1';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyeHFnbHZ4aHRyc21hZWFvenZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3ODI2MjAsImV4cCI6MjA5MTM1ODYyMH0.b1reHkSXvLABlu9bYX1msV091QRPYm5CCauX0PuQ2dg';
+const H = {'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+
+const DISP_MAP = {
+  'P00105141':'Iliescu Alexandru','P00115831':'Gradinaru Laurentiu',
+  'P00116919':'Ciolocian Patrik','P00106906':'Cotarcea Catalin',
+  'P00122347':'Ratiu Nicolae','P00107914':'Petica Adelina',
+  'P00103883':'Iofciulescu','P00117880':'Hardut Darius',
+  'P10007251':'Kasler Daniel'
+};
+
+let parsedRows = [];
+let existingIds = new Set();
+
+function fmtDate(v) {
+  if(!v) return null;
+  if(v instanceof Date) return v.toISOString().split('T')[0];
+  if(typeof v === 'number') {
+    const d = new Date((v - 25569) * 86400 * 1000);
+    return d.toISOString().split('T')[0];
+  }
+  if(typeof v === 'string' && v.includes('-')) return v.substring(0,10);
+  return null;
+}
+
+function mapStatus(s) {
+  if(!s) return 'la_sef';
+  if(s.includes('Done')) return 'inchis';
+  if(s.includes('In Process')) return 'intern_piesar';
+  return 'la_sef';
+}
+
+function mapCls(c) {
+  const code = String(c||'').trim();
+  if(code === '02') return '02';
+  if(code === '05') return '05';
+  if(code === '52') return '52';
+  return code || '02';
+}
+
+function sapStatusBadge(s) {
+  if(!s) return '<span class="badge b-new">Nou</span>';
+  if(s.includes('Done')) return '<span class="badge b-done">Finalizat</span>';
+  if(s.includes('In Process')) return '<span class="badge b-proc">În lucru</span>';
+  if(s.includes('Not Started')) return '<span class="badge b-new">Neînceput</span>';
+  return '<span class="badge b-new">'+s+'</span>';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if(file) handleFile(file);
+}
+
+async function handleFile(file) {
+  if(!file) return;
+  document.getElementById('file-info').style.display='block';
+  document.getElementById('file-info').textContent = 'Se procesează: '+file.name+' ('+Math.round(file.size/1024)+' KB)...';
+
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+
+  if(!wb.SheetNames.includes('Work Orders')) {
+    alert('Fișierul nu conține sheet-ul "Work Orders". Verifică că e fișierul corect din SAP.');
+    return;
+  }
+
+  const ws = wb.Sheets['Work Orders'];
+  const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+
+  // Find header row (contains 'Notification')
+  let headerRow = -1;
+  for(let i=0;i<raw.length;i++) {
+    if(raw[i] && raw[i].includes('Notification')) { headerRow=i; break; }
+  }
+  if(headerRow < 0) { alert('Nu găsesc headerele în sheet-ul Work Orders.'); return; }
+
+  const headers = raw[headerRow];
+  const COL = {};
+  headers.forEach((h,i) => { if(h) COL[h] = i; });
+
+  // Also read Disponenti sheet if available
+  const dispMap = {...DISP_MAP};
+  if(wb.SheetNames.includes('Disponenti')) {
+    const wsd = wb.Sheets['Disponenti'];
+    const dispRaw = XLSX.utils.sheet_to_json(wsd, {header:1, defval:null});
+    dispRaw.slice(1).forEach(row => {
+      if(row[0] && row[1]) dispMap[String(row[0])] = String(row[1]);
+    });
+  }
+
+  // Parse rows
+  parsedRows = [];
+  for(let i=headerRow+1; i<raw.length; i++) {
+    const row = raw[i];
+    if(!row || !row[COL['Notification']]) continue;
+    const notifId = String(row[COL['Notification']]).trim();
+    const status = String(row[COL['STATUS']]||'');
+    const createdBy = String(row[COL['Created By']]||'').trim();
+    const equip = String(row[COL['Equipment']]||'').trim();
+    const equipDesc = String(row[COL['Technical Object Desc.']]||'').trim();
+    const site = String(row[COL['Site']]||'').trim();
+    const desc = String(row[COL['Description']]||'').trim();
+    const causeCode = mapCls(row[COL['Cause Code']]);
+    const reqStart = fmtDate(row[COL['Required Start']]);
+    const reqEnd = fmtDate(row[COL['Required End']]);
+    const order = row[COL['Order']] ? String(row[COL['Order']]).trim() : null;
+    const mechName = row[COL['Name']] ? String(row[COL['Name']]).trim() : null;
+    const mechDate = fmtDate(row[COL['🔧 Mechanic\nCompletion Date']]);
+    const disponent = dispMap[createdBy] || createdBy || 'Necunoscut';
+
+    // Determine atelier from work center or site
+    const workCenter = String(row[COL['Main Work Center']]||'').trim();
+    let zona = 'SUD';
+    let atelier = 'Atelier SUD';
+    const siteL = site.toLowerCase();
+    if(siteL.includes('west') || siteL.includes('vest') || siteL.includes('wg') || siteL.includes('oradea') || siteL.includes('timis')) {
+      zona = 'VEST'; atelier = 'Atelier VEST';
+    }
+
+    parsedRows.push({
+      id: notifId,
+      zona, atelier,
+      disponent,
+      nr_inventar: equip,
+      marca: equipDesc.split(' ')[0] || '—',
+      model: equipDesc.split(' ').slice(1).join(' ') || equipDesc,
+      an: '—',
+      sasiu: '—',
+      clasificare: causeCode,
+      descriere: desc,
+      locatie: site,
+      data_deschidere: reqStart,
+      data_limita: reqEnd,
+      work_order: order ? 'WO-'+order : null,
+      mecanic: mechName,
+      data_programare: mechDate,
+      status_sap: status,
+      _sapStatus: status,
+    });
+  }
+
+  // Load existing from Supabase
+  document.getElementById('file-info').textContent = 'Se verifică baza de date...';
+  try {
+    const r = await fetch(SUPABASE_URL+'/notificari?select=id,status,nr_po,data_receptie', {headers:{'apikey':KEY,'Authorization':'Bearer '+KEY}});
+    const existing = await r.json();
+    existingIds = new Map();
+    if(Array.isArray(existing)) existing.forEach(n => existingIds.set(n.id, n));
+  } catch(e) { console.error(e); }
+
+  // Classify rows
+  let toImport=0, exist=0, skip=0;
+  const previewRows = parsedRows.map(r => {
+    const ex = existingIds.get(r.id);
+    const isDone = r._sapStatus.includes('Done');
+    let action = '';
+    if(isDone && ex) { skip++; action='skip'; }
+    else if(isDone && !ex) { skip++; action='skip'; }
+    else if(ex) { exist++; action='update'; }
+    else { toImport++; action='new'; }
+    return {...r, _action:action, _existing:ex};
+  });
+
+  document.getElementById('st-total').textContent = parsedRows.length;
+  document.getElementById('st-import').textContent = toImport;
+  document.getElementById('st-exist').textContent = exist;
+  document.getElementById('st-skip').textContent = skip;
+  document.getElementById('import-count-label').textContent = (toImport+exist)+' notificări vor fi procesate';
+
+  const tbody = document.getElementById('preview-tbody');
+  tbody.innerHTML = previewRows.slice(0,50).map(r => {
+    const actionBadge = r._action==='new'?'<span class="badge b-imp">Nou</span>':r._action==='update'?'<span class="badge b-proc">Update</span>':'<span class="badge b-skip">Skip</span>';
+    return '<tr style="'+(r._action==='skip'?'opacity:.5':'')+'">'+
+      '<td style="font-size:11px">'+r.id+'</td>'+
+      '<td style="font-size:11px">'+(r.work_order||'—')+'</td>'+
+      '<td style="font-size:11px">'+r.model.substring(0,20)+'</td>'+
+      '<td style="font-size:11px">'+r.locatie.substring(0,25)+'</td>'+
+      '<td style="font-size:11px">'+r.disponent+'</td>'+
+      '<td style="font-size:11px">'+(r.data_deschidere||'—')+'</td>'+
+      '<td style="font-size:11px">'+(r.data_limita||'—')+'</td>'+
+      '<td>'+r.clasificare+'</td>'+
+      '<td>'+sapStatusBadge(r._sapStatus)+'</td>'+
+      '<td>'+actionBadge+'</td>'+
+    '</tr>';
+  }).join('');
+
+  if(previewRows.length > 50) {
+    tbody.innerHTML += '<tr><td colspan="10" style="text-align:center;color:#888;padding:.75rem;font-size:12px">... și încă '+(previewRows.length-50)+' rânduri</td></tr>';
+  }
+
+  document.getElementById('file-info').textContent = 'Fișier: '+file.name+' — '+parsedRows.length+' notificări detectate';
+  document.getElementById('preview-card').style.display='block';
+  document.getElementById('result-card').style.display='none';
+}
+
+async function doImport() {
+  document.getElementById('btn-import').disabled = true;
+  document.getElementById('result-card').style.display='block';
+  document.getElementById('preview-card').style.display='none';
+
+  const log = document.getElementById('import-log');
+  log.innerHTML = '';
+
+  const toProcess = parsedRows.filter(r => {
+    const isDone = r._sapStatus.includes('Done');
+    return !isDone;
+  });
+
+  let added=0, updated=0, errors=0, skipped=0;
+  const total = toProcess.length;
+
+  function addLog(msg, type='') {
+    log.innerHTML += '<div class="'+(type||'')+'">'+msg+'</div>';
+    log.scrollTop = log.scrollHeight;
+  }
+
+  addLog('Pornire import: '+total+' notificări de procesat...');
+
+  for(let i=0; i<toProcess.length; i++) {
+    const r = toProcess[i];
+    const pct = Math.round(((i+1)/total)*100);
+    document.getElementById('prog-fill').style.width = pct+'%';
+    document.getElementById('prog-label').textContent = 'Se procesează '+((i+1))+' din '+total+' ('+pct+'%)';
+
+    const ex = existingIds.get(r.id);
+
+    try {
+      if(ex) {
+        // Update — don't overwrite manual fields (nr_po, data_receptie, furnizor etc.)
+        const updateData = {
+          disponent: r.disponent,
+          nr_inventar: r.nr_inventar,
+          marca: r.marca,
+          model: r.model,
+          clasificare: r.clasificare,
+          descriere: r.descriere,
+          locatie: r.locatie,
+          data_deschidere: r.data_deschidere,
+          data_limita: r.data_limita,
+          zona: r.zona,
+          atelier: r.atelier,
+        };
+        if(r.work_order && !ex.work_order) updateData.work_order = r.work_order;
+        if(r.mecanic) updateData.mecanic = r.mecanic;
+        if(r.data_programare && !ex.data_programare) updateData.data_programare = r.data_programare;
+
+        const resp = await fetch(SUPABASE_URL+'/notificari?id=eq.'+r.id, {
+          method:'PATCH',
+          headers:{...H,'Prefer':'return=minimal'},
+          body:JSON.stringify(updateData)
+        });
+        if(resp.ok) { updated++; addLog('✓ Actualizat: '+r.id+' — '+r.disponent,'ok'); }
+        else { errors++; addLog('✗ Eroare update '+r.id,'err'); }
+      } else {
+        // Insert new
+        const appStatus = r._sapStatus.includes('In Process') ? 'intern_piesar' : 'la_sef';
+        const insertData = {
+          id: r.id, zona: r.zona, atelier: r.atelier,
+          disponent: r.disponent, nr_inventar: r.nr_inventar,
+          marca: r.marca, model: r.model, an: r.an, sasiu: r.sasiu,
+          clasificare: r.clasificare, descriere: r.descriere, locatie: r.locatie,
+          data_deschidere: r.data_deschidere, data_limita: r.data_limita,
+          work_order: r.work_order, mecanic: r.mecanic,
+          data_programare: r.data_programare, status: appStatus
+        };
+        const resp = await fetch(SUPABASE_URL+'/notificari', {
+          method:'POST',
+          headers:H,
+          body:JSON.stringify(insertData)
+        });
+        if(resp.ok||resp.status===201) { added++; addLog('+ Adăugat: '+r.id+' — '+r.disponent+' ('+r.model.substring(0,30)+')','ok'); }
+        else {
+          const err = await resp.text();
+          if(err.includes('duplicate')) { skipped++; addLog('~ Skip duplicat: '+r.id,'warn'); }
+          else { errors++; addLog('✗ Eroare insert '+r.id+': '+err.substring(0,80),'err'); }
+        }
+      }
+    } catch(e) {
+      errors++;
+      addLog('✗ Excepție '+r.id+': '+e.message,'err');
+    }
+
+    document.getElementById('res-add').textContent = added;
+    document.getElementById('res-upd').textContent = updated;
+    document.getElementById('res-err').textContent = errors;
+    document.getElementById('res-skip').textContent = skipped + (parsedRows.length - toProcess.length);
+
+    await new Promise(r=>setTimeout(r,80));
+  }
+
+  document.getElementById('prog-fill').style.width='100%';
+  document.getElementById('prog-label').textContent = 'Import finalizat!';
+  document.getElementById('last-import-info').textContent = 'Ultimul import: '+new Date().toLocaleString('ro-RO');
+  addLog('=== FINALIZAT: '+added+' adăugate, '+updated+' actualizate, '+errors+' erori ===','ok');
+}
+
+function resetImport() {
+  parsedRows = [];
+  document.getElementById('preview-card').style.display='none';
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('file-info').style.display='none';
+  document.getElementById('file-input').value='';
+  document.getElementById('btn-import').disabled=false;
+  document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('import-log').innerHTML='';
+  ['res-add','res-upd','res-err','res-skip'].forEach(id=>document.getElementById(id).textContent='0');
+}
+</script>
+</body>
+</html>
