@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PES RO — Programator Intervenții</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a18;font-size:14px}
+.topbar{background:#fff;border-bottom:1px solid #e8e7e2;padding:.6rem 1.25rem;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.brand{background:#D85A30;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:.5px}
+.topbar-title{font-size:14px;font-weight:500}
+.main{max-width:1200px;margin:0 auto;padding:1rem}
+.btn{font-family:inherit;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer;border:1px solid #d0cfc8;background:#fff;color:#1a1a18;transition:all .15s}
+.btn:hover{background:#f5f5f3}
+.btn-p{background:#D85A30;color:#fff;border:none}
+.btn-p:hover{background:#c04e28}
+.btn-g{background:#1D9E75;color:#fff;border:none}
+.btn-g:hover{background:#177a5c}
+.btn-sm{padding:3px 9px;font-size:11px}
+.card{background:#fff;border:1px solid #e8e7e2;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+.week-nav{display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.week-title{font-size:15px;font-weight:600;flex:1}
+.week-sub{font-size:12px;color:#888}
+.week-grid{display:grid;grid-template-columns:160px repeat(7,minmax(0,1fr));border:1px solid #e8e7e2;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:1rem}
+.wg-header{background:#f5f5f3;padding:8px 10px;border-bottom:1px solid #e8e7e2;border-right:1px solid #e8e7e2;font-size:11px;font-weight:500;color:#888;text-align:center}
+.wg-header.day{display:flex;flex-direction:column;align-items:center;gap:1px}
+.wg-header.day .dn{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.3px}
+.wg-header.day .dd{font-size:18px;font-weight:600;color:#1a1a18;line-height:1}
+.wg-header.day.today{background:#FEF0EB}
+.wg-header.day.today .dd{color:#D85A30}
+.wg-mech{padding:8px 10px;border-bottom:1px solid #f0efe8;border-right:1px solid #e8e7e2;font-size:12px;font-weight:500;background:#fafaf8;display:flex;align-items:center;gap:6px}
+.wg-mech .av{width:24px;height:24px;border-radius:50%;background:#E6F1FB;color:#0C447C;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wg-cell{padding:5px;border-bottom:1px solid #f0efe8;border-right:1px solid #e8e7e2;min-height:70px;vertical-align:top;cursor:pointer;transition:background .1s}
+.wg-cell:hover{background:#FAFAF8}
+.wg-cell.today{background:#FFFAF8}
+.wg-cell:last-child{border-right:none}
+.wg-row:last-child .wg-cell,.wg-row:last-child .wg-mech{border-bottom:none}
+.ev-item{border-radius:6px;padding:4px 7px;margin-bottom:3px;font-size:11px;cursor:pointer;border-left:3px solid transparent}
+.ev-item:hover{opacity:.85}
+.ev-rep{background:#EAF3DE;border-left-color:#1D9E75;color:#27500A}
+.ev-wait{background:#FAEEDA;border-left-color:#D85A30;color:#854F0B}
+.ev-ext{background:#FAECE7;border-left-color:#993C1D;color:#712B13}
+.ev-custom{background:#EEEDFE;border-left-color:#534AB7;color:#3C3489}
+.ev-title{font-weight:600;line-height:1.3}
+.ev-sub{opacity:.75;margin-top:1px;font-size:10px}
+.add-slot{border:1px dashed #d0cfc8;border-radius:6px;padding:4px;text-align:center;font-size:10px;color:#ccc;cursor:pointer;margin-top:2px}
+.add-slot:hover{border-color:#D85A30;color:#D85A30;background:#FEF0EB}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500}
+.fgrp{display:flex;flex-direction:column;gap:3px;margin-bottom:10px}
+.fgrp label{font-size:11px;color:#666;font-weight:500}
+.fgrp input,.fgrp select,.fgrp textarea{font-family:inherit;font-size:13px;padding:7px 10px;border:1px solid #d0cfc8;border-radius:8px;width:100%}
+.fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{outline:none;border-color:#D85A30}
+.fgrp textarea{resize:vertical;min-height:50px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-wrap{background:rgba(0,0,0,0.4);display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;min-height:400px}
+.modal{background:#fff;border-radius:14px;padding:1.5rem;width:100%;max-width:480px;border:1px solid #e8e7e2}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid #e8e7e2}
+.sec-title{font-size:13px;font-weight:600;color:#1a1a18;margin-bottom:.75rem}
+.unscheduled-list{display:flex;flex-direction:column;gap:6px}
+.unsched-item{border:1px solid #e8e7e2;border-radius:8px;padding:.6rem .9rem;background:#fff;display:flex;align-items:center;gap:8px;cursor:pointer}
+.unsched-item:hover{background:#f5f5f3;border-color:#d0cfc8}
+.unsched-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#888}
+.leg-dot{width:10px;height:10px;border-radius:3px}
+.mech-check{display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto}
+.mech-row{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;cursor:pointer}
+.mech-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#D85A30}
+.tab-bar{display:flex;gap:3px;margin-bottom:1rem;background:#f0efe8;padding:3px;border-radius:10px}
+.tab{flex:1;padding:7px;font-size:12px;border:none;background:transparent;cursor:pointer;border-radius:8px;color:#888;font-family:inherit}
+.tab.active{background:#fff;color:#1a1a18;font-weight:600}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:1rem}
+.metric{background:#f5f5f3;border-radius:8px;padding:.6rem .9rem}
+.m-label{font-size:11px;color:#888;margin-bottom:2px}
+.m-val{font-size:20px;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">PES RO</div>
+  <div class="topbar-title">Programator intervenții</div>
+  <div style="margin-left:auto;display:flex;gap:6px">
+    <button class="btn btn-sm" id="btn-add-custom" onclick="openAddCustom()" style="display:none">+ Intervenție nouă</button>
+    <button class="btn btn-sm" onclick="loadData()">&#8635; Actualizează</button>
+    <a href="https://radu123763.github.io/pes-ro" class="btn btn-sm">← Aplicație</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="tab-bar">
+    <button class="tab active" id="tab-sapt" onclick="switchTab('sapt')">Vedere săptămânală</button>
+    <button class="tab" id="tab-neprog" onclick="switchTab('neprog')">De programat</button>
+  </div>
+
+  <div id="view-sapt">
+    <div class="metrics">
+      <div class="metric"><div class="m-label">Programate săptămâna aceasta</div><div class="m-val" id="m-prog">—</div></div>
+      <div class="metric"><div class="m-label">De programat (piese gata)</div><div class="m-val" style="color:#D85A30" id="m-wait">—</div></div>
+      <div class="metric"><div class="m-label">La service extern</div><div class="m-val" style="color:#993C1D" id="m-ext">—</div></div>
+      <div class="metric"><div class="m-label">Intervenții custom săpt.</div><div class="m-val" style="color:#534AB7" id="m-custom">—</div></div>
+    </div>
+
+    <div class="week-nav">
+      <div>
+        <div class="week-title" id="week-label">—</div>
+        <div class="week-sub" id="week-range">—</div>
+      </div>
+      <button class="btn btn-sm" onclick="changeWeek(-1)">← Anterior</button>
+      <button class="btn btn-sm btn-p" onclick="changeWeek(0)">Azi</button>
+      <button class="btn btn-sm" onclick="changeWeek(1)">Următor →</button>
+    </div>
+
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:#1D9E75"></div>Programat (WO)</div>
+      <div class="leg"><div class="leg-dot" style="background:#D85A30"></div>Piese gata — de programat</div>
+      <div class="leg"><div class="leg-dot" style="background:#993C1D"></div>Service extern</div>
+      <div class="leg"><div class="leg-dot" style="background:#534AB7"></div>Intervenție custom</div>
+    </div>
+
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+
+  <div id="view-neprog" style="display:none">
+    <div class="card">
+      <div class="sec-title">Notificări cu piese gata — de programat</div>
+      <div id="neprog-list" class="unscheduled-list"></div>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="sec-title">La service extern — în așteptare</div>
+      <div id="extern-list" class="unscheduled-list"></div>
+    </div>
+  </div>
+
+  <div id="modal-area"></div>
+</div>
+
+<script>
+const URL_DB = 'https://zrxqglvxhtrsmaeaozvx.supabase.co/rest/v1';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyeHFnbHZ4aHRyc21hZWFvenZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3ODI2MjAsImV4cCI6MjA5MTM1ODYyMH0.b1reHkSXvLABlu9bYX1msV091QRPYm5CCauX0PuQ2dg';
+const H = {'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+const HM = {'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=minimal'};
+
+const MECANICI = [
+  'BARBU FLOREA','Basaraba Ioan','CIORBA LIVIU-ALEXANDRU','Gordea Alin-Ionut',
+  'Hardut Darius-Gabriel','Iliescu Alexandru-Cristian','MEDAN FLORIAN',
+  'Oloeriu Mihai-Bogdan','Ratiu Nicolae','SICULAN IOAN-FLORIN','TODEA ALIN-IOAN','Toth Arpad'
+];
+
+const DAYS = ['Lun','Mar','Mie','Joi','Vin','Sâm','Dum'];
+const MONTHS = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+
+let weekOffset = 0;
+let allNotif = [];
+let customEvents = JSON.parse(localStorage.getItem('pes_custom_events')||'[]');
+let currentUser = null;
+let isSef = false;
+let editingCustomId = null;
+let schedulingNotifId = null;
+
+async function loadData() {
+  const r = await fetch(URL_DB+'/notificari?select=*&status=neq.inchis', {headers:{'apikey':KEY,'Authorization':'Bearer '+KEY}});
+  const data = await r.json();
+  allNotif = Array.isArray(data) ? data : [];
+
+  // Detect role from URL param or localStorage
+  const params = new URLSearchParams(window.location.search);
+  const role = params.get('role') || localStorage.getItem('pes_role') || '';
+  isSef = role === 'sef' || role === 'manager' || role === 'director';
+  if(isSef) document.getElementById('btn-add-custom').style.display='inline-block';
+
+  updateMetrics();
+  renderWeek();
+  renderNeprog();
+}
+
+function getMonday(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day===0?-6:1);
+  const mon = new Date(now); mon.setDate(diff+offset*7); mon.setHours(0,0,0,0);
+  return mon;
+}
+
+function fmt(d) { return d instanceof Date ? d.toISOString().split('T')[0] : String(d||'').substring(0,10); }
+function addDays(d,n) { const dt=new Date(d); dt.setDate(dt.getDate()+n); return dt; }
+
+function updateMetrics() {
+  const monday = getMonday(weekOffset);
+  const sunday = addDays(monday,6);
+  const ms = fmt(monday), ss = fmt(sunday);
+
+  const progThisWeek = allNotif.filter(n=>n.data_programare&&n.data_programare>=ms&&n.data_programare<=ss);
+  const waitPiese = allNotif.filter(n=>['intern_receptie'].includes(n.status));
+  const extService = allNotif.filter(n=>n.status==='extern_service');
+  const customThisWeek = customEvents.filter(e=>e.date>=ms&&e.date<=ss);
+
+  document.getElementById('m-prog').textContent = progThisWeek.length;
+  document.getElementById('m-wait').textContent = waitPiese.length;
+  document.getElementById('m-ext').textContent = extService.length;
+  document.getElementById('m-custom').textContent = customThisWeek.length;
+}
+
+function changeWeek(dir) {
+  if(dir===0) weekOffset=0; else weekOffset+=dir;
+  updateMetrics();
+  renderWeek();
+}
+
+function switchTab(t) {
+  document.getElementById('view-sapt').style.display = t==='sapt'?'block':'none';
+  document.getElementById('view-neprog').style.display = t==='neprog'?'block':'none';
+  document.getElementById('tab-sapt').classList.toggle('active',t==='sapt');
+  document.getElementById('tab-neprog').classList.toggle('active',t==='neprog');
+}
+
+function initials(name) {
+  return name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+}
+
+function renderWeek() {
+  const monday = getMonday(weekOffset);
+  const sunday = addDays(monday,6);
+  const todayStr = fmt(new Date());
+
+  const label = weekOffset===0?'Săptămâna curentă':weekOffset<0?'Săptămâna trecută':'Săptămâna viitoare';
+  document.getElementById('week-label').textContent = label;
+  document.getElementById('week-range').textContent =
+    monday.getDate()+' '+MONTHS[monday.getMonth()]+' — '+sunday.getDate()+' '+MONTHS[sunday.getMonth()]+' '+sunday.getFullYear();
+
+  // Build events per mechanic per day
+  const days = Array.from({length:7},(_,i)=>fmt(addDays(monday,i)));
+
+  // Get all events for this week
+  const weekNotif = allNotif.filter(n => {
+    if(n.data_programare && n.data_programare>=days[0] && n.data_programare<=days[6]) return true;
+    if(n.status==='extern_service' && n.data_est_ret && n.data_est_ret>=days[0] && n.data_est_ret<=days[6]) return true;
+    if(n.status==='intern_receptie') return true;
+    return false;
+  });
+
+  const weekCustom = customEvents.filter(e=>e.date>=days[0]&&e.date<=days[6]);
+
+  // Build grid HTML
+  const grid = document.getElementById('week-grid');
+  let html = '';
+
+  // Header row
+  html += '<div class="wg-header" style="border-right:1px solid #e8e7e2">Mecanic</div>';
+  days.forEach((d,i) => {
+    const dt = addDays(monday,i);
+    const isToday = d===todayStr;
+    html += '<div class="wg-header day'+(isToday?' today':'')+'">'+
+      '<div class="dn">'+DAYS[i]+'</div>'+
+      '<div class="dd">'+dt.getDate()+'</div>'+
+    '</div>';
+  });
+
+  // Mechanic rows
+  MECANICI.forEach(mech => {
+    html += '<div class="wg-row" style="display:contents">';
+    html += '<div class="wg-mech"><div class="av">'+initials(mech)+'</div><span style="font-size:11px;line-height:1.2">'+mech+'</span></div>';
+
+    days.forEach(d => {
+      const isToday = d===todayStr;
+      html += '<div class="wg-cell'+(isToday?' today':'')+'" onclick="cellClick(\''+mech+'\',\''+d+'\')">';
+
+      // Programmed WOs for this mechanic on this day
+      const mechNotif = weekNotif.filter(n => {
+        if(!n.data_programare || n.data_programare!==d) return false;
+        const mechs = n.mecanic ? n.mecanic.split(',').map(m=>m.trim()) : [];
+        return mechs.some(m=>m.toLowerCase()===mech.toLowerCase()) || n.mecanic===mech;
+      });
+
+      mechNotif.forEach(n => {
+        html += '<div class="ev-item ev-rep" onclick="event.stopPropagation();showEvDetail(\''+n.id+'\')">'+
+          '<div class="ev-title">'+(n.work_order||n.id)+'</div>'+
+          '<div class="ev-sub">'+(n.model||'').substring(0,20)+'</div>'+
+          '<div class="ev-sub">'+(n.locatie||'').substring(0,20)+'</div>'+
+        '</div>';
+      });
+
+      // Custom events for this mechanic on this day
+      const mechCustom = weekCustom.filter(e=>e.mechanic===mech&&e.date===d);
+      mechCustom.forEach(e => {
+        html += '<div class="ev-item ev-custom" onclick="event.stopPropagation();showCustomDetail(\''+e.id+'\')">'+
+          '<div class="ev-title">'+e.title+'</div>'+
+          '<div class="ev-sub">'+(e.location||'').substring(0,20)+'</div>'+
+        '</div>';
+      });
+
+      if(isSef) {
+        html += '<div class="add-slot" onclick="event.stopPropagation();openAddCustomForCell(\''+mech+'\',\''+d+'\')" title="Adaugă intervenție">+</div>';
+      }
+
+      html += '</div>';
+    });
+
+    html += '</div>';
+  });
+
+  // Extra row for unassigned mechanic notifs
+  html += '<div class="wg-row" style="display:contents">';
+  html += '<div class="wg-mech" style="color:#888;font-style:italic"><div class="av" style="background:#F1EFE8;color:#888">?</div><span style="font-size:11px">Nealocați</span></div>';
+  days.forEach(d => {
+    const isToday = d===todayStr;
+    html += '<div class="wg-cell'+(isToday?' today':'')+'">';
+    const unalloc = weekNotif.filter(n=>n.data_programare===d&&(!n.mecanic||n.mecanic===''));
+    unalloc.forEach(n => {
+      html += '<div class="ev-item ev-wait" onclick="showEvDetail(\''+n.id+'\')">'+
+        '<div class="ev-title">'+(n.work_order||n.id)+'</div>'+
+        '<div class="ev-sub">Fără mecanic alocat</div>'+
+      '</div>';
+    });
+
+    // Piese gata neprogramate
+    const piese = allNotif.filter(n=>n.status==='intern_receptie'&&!n.data_programare);
+    if(d===todayStr&&piese.length>0) {
+      html += '<div class="ev-item ev-wait" onclick="switchTab(\'neprog\')" title="'+piese.length+' notif. cu piese gata">'+
+        '<div class="ev-title">'+piese.length+'x piese gata</div>'+
+        '<div class="ev-sub">Click pentru detalii</div>'+
+      '</div>';
+    }
+
+    html += '</div>';
+  });
+  html += '</div>';
+
+  grid.innerHTML = html;
+}
+
+function renderNeprog() {
+  const piese = allNotif.filter(n=>n.status==='intern_receptie'&&!n.data_programare);
+  const ext = allNotif.filter(n=>n.status==='extern_service');
+  const today = new Date().toISOString().split('T')[0];
+
+  const neprogEl = document.getElementById('neprog-list');
+  neprogEl.innerHTML = piese.length ? piese.map(n=>`
+    <div class="unsched-item" onclick="${isSef?'openSchedule(\''+n.id+'\')':'showEvDetail(\''+n.id+'\')'}">
+      <div class="unsched-dot" style="background:#D85A30"></div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600">${n.work_order||n.id} — ${n.model||'—'}</div>
+        <div style="font-size:11px;color:#888">${n.disponent||'—'} | ${n.locatie||'—'}</div>
+        <div style="font-size:11px;color:#888">Piese recep.: ${n.data_receptie||'—'} | Termen: <span style="color:${new Date(n.data_limita)<new Date()?'#A32D2D':'#888'}">${n.data_limita||'—'}</span></div>
+      </div>
+      ${isSef?'<button class="btn btn-sm btn-p" onclick="event.stopPropagation();openSchedule(\''+n.id+'\')">Programează</button>':''}
+    </div>`).join('') : '<div style="color:#aaa;font-size:12px;padding:.75rem;text-align:center">Nicio notificare cu piese gata</div>';
+
+  const extEl = document.getElementById('extern-list');
+  extEl.innerHTML = ext.length ? ext.map(n=>`
+    <div class="unsched-item" onclick="showEvDetail('${n.id}')">
+      <div class="unsched-dot" style="background:#993C1D"></div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600">${n.work_order||n.id} — ${n.model||'—'}</div>
+        <div style="font-size:11px;color:#888">Service: ${n.service_extern||'—'} | Est. returnare: ${n.data_est_ret||'—'}</div>
+        <div style="font-size:11px;color:#888">Locație: ${n.locatie||'—'}</div>
+      </div>
+    </div>`).join('') : '<div style="color:#aaa;font-size:12px;padding:.75rem;text-align:center">Nicio reparație externă activă</div>';
+}
+
+function showEvDetail(id) {
+  const n = allNotif.find(x=>x.id===id);
+  if(!n) return;
+  const mechs = n.mecanic ? n.mecanic.split(',').map(m=>m.trim()).join(', ') : '—';
+  showModal(`
+    <div class="modal-title">Detalii intervenție</div>
+    <div class="fgrp"><label>Nr. notificare / WO</label><div style="font-size:13px;font-weight:500;padding:7px 10px;background:#f5f5f3;border-radius:8px">${n.id} / ${n.work_order||'—'}</div></div>
+    <div class="fg2">
+      <div class="fgrp"><label>Echipament</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${n.marca||''} ${n.model||''}</div></div>
+      <div class="fgrp"><label>Nr. inventar</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${n.nr_inventar||'—'}</div></div>
+    </div>
+    <div class="fgrp"><label>Locație</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${n.locatie||'—'}</div></div>
+    <div class="fg2">
+      <div class="fgrp"><label>Disponent</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${n.disponent||'—'}</div></div>
+      <div class="fgrp"><label>Termen</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px;color:${new Date(n.data_limita)<new Date()?'#A32D2D':'#1a1a18'}">${n.data_limita||'—'}</div></div>
+    </div>
+    <div class="fg2">
+      <div class="fgrp"><label>Data programare</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${n.data_programare||'—'}</div></div>
+      <div class="fgrp"><label>Mecanic(i)</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${mechs}</div></div>
+    </div>
+    <div class="fgrp"><label>Descriere defect</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${n.descriere||'—'}</div></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      ${isSef&&n.status==='intern_receptie'&&!n.data_programare?'<button class="btn btn-p" onclick="closeModal();openSchedule(\''+n.id+'\')">Programează</button>':''}
+      <button class="btn" onclick="closeModal()">Închide</button>
+    </div>
+  `);
+}
+
+function openSchedule(id) {
+  schedulingNotifId = id;
+  const n = allNotif.find(x=>x.id===id);
+  const existingMechs = n&&n.mecanic ? n.mecanic.split(',').map(m=>m.trim()) : [];
+  const existingDate = n&&n.data_programare ? n.data_programare : new Date().toISOString().split('T')[0];
+
+  showModal(`
+    <div class="modal-title">Programare intervenție — ${id}</div>
+    <div style="background:#f5f5f3;border-radius:8px;padding:.6rem .9rem;margin-bottom:12px;font-size:12px">
+      <strong>${n?n.marca+' '+n.model:''}</strong> | ${n?n.locatie:''}<br>
+      <span style="color:#888">Termen: ${n?n.data_limita:'—'}</span>
+    </div>
+    <div class="fgrp">
+      <label>Data intervenție *</label>
+      <input type="date" id="sched-date" value="${existingDate}">
+    </div>
+    <div class="fgrp">
+      <label>Mecanici alocați *</label>
+      <div class="mech-check" id="mech-check">
+        ${MECANICI.map(m=>`
+          <label class="mech-row">
+            <input type="checkbox" value="${m}" ${existingMechs.includes(m)?'checked':''}>
+            <span>${m}</span>
+          </label>`).join('')}
+      </div>
+    </div>
+    <div class="fgrp">
+      <label>Observații</label>
+      <textarea id="sched-obs" placeholder="Note despre intervenție...">${n&&n.obs_tehnice?n.obs_tehnice:''}</textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-p" onclick="saveSchedule()">Salvează programarea</button>
+      <button class="btn" onclick="closeModal()">Anulează</button>
+    </div>
+  `);
+}
+
+async function saveSchedule() {
+  const date = document.getElementById('sched-date').value;
+  const checked = [...document.querySelectorAll('#mech-check input:checked')].map(el=>el.value);
+  const obs = document.getElementById('sched-obs').value;
+
+  if(!date) { alert('Selectează data!'); return; }
+  if(checked.length===0) { alert('Selectează cel puțin un mecanic!'); return; }
+
+  const r = await fetch(URL_DB+'/notificari?id=eq.'+schedulingNotifId, {
+    method:'PATCH', headers:HM,
+    body:JSON.stringify({data_programare:date, mecanic:checked.join(', '), obs_tehnice:obs, status:'programat'})
+  });
+
+  if(r.ok) {
+    closeModal();
+    await loadData();
+    alert('Programare salvată!');
+  } else {
+    alert('Eroare la salvare!');
+  }
+}
+
+function cellClick(mech, date) {
+  if(!isSef) return;
+  openAddCustomForCell(mech, date);
+}
+
+function openAddCustom() {
+  editingCustomId = null;
+  showModal(`
+    <div class="modal-title">Intervenție nouă</div>
+    <div class="fgrp"><label>Titlu / descriere *</label><input type="text" id="c-title" placeholder="ex: Revizie programată, Transport echipament..."></div>
+    <div class="fg2">
+      <div class="fgrp"><label>Data *</label><input type="date" id="c-date" value="${new Date().toISOString().split('T')[0]}"></div>
+      <div class="fgrp"><label>Locație</label><input type="text" id="c-loc" placeholder="ex: Șantier A1"></div>
+    </div>
+    <div class="fgrp">
+      <label>Mecanic alocat</label>
+      <select id="c-mech">
+        <option value="">— selectează —</option>
+        ${MECANICI.map(m=>`<option value="${m}">${m}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fgrp"><label>Observații</label><textarea id="c-obs" placeholder="Detalii intervenție..."></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-p" onclick="saveCustom()">Salvează</button>
+      <button class="btn" onclick="closeModal()">Anulează</button>
+    </div>
+  `);
+}
+
+function openAddCustomForCell(mech, date) {
+  editingCustomId = null;
+  showModal(`
+    <div class="modal-title">Intervenție nouă — ${mech}</div>
+    <div class="fgrp"><label>Titlu / descriere *</label><input type="text" id="c-title" placeholder="ex: Revizie, Transport, Inspecție..."></div>
+    <div class="fg2">
+      <div class="fgrp"><label>Data *</label><input type="date" id="c-date" value="${date}"></div>
+      <div class="fgrp"><label>Locație</label><input type="text" id="c-loc" placeholder="ex: Șantier A1"></div>
+    </div>
+    <div class="fgrp"><label>Mecanic</label><input type="text" id="c-mech" value="${mech}" readonly style="background:#f5f5f3"></div>
+    <div class="fgrp"><label>Observații</label><textarea id="c-obs"></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-p" onclick="saveCustom('${mech}')">Salvează</button>
+      <button class="btn" onclick="closeModal()">Anulează</button>
+    </div>
+  `);
+}
+
+function saveCustom(forceMech) {
+  const title = document.getElementById('c-title').value.trim();
+  const date = document.getElementById('c-date').value;
+  const loc = document.getElementById('c-loc').value.trim();
+  const mech = forceMech || (document.getElementById('c-mech') ? document.getElementById('c-mech').value : '');
+  const obs = document.getElementById('c-obs').value.trim();
+
+  if(!title||!date) { alert('Completează titlul și data!'); return; }
+
+  const ev = {
+    id: editingCustomId || 'custom-'+Date.now(),
+    title, date, location:loc, mechanic:mech, obs,
+    created: new Date().toISOString()
+  };
+
+  if(editingCustomId) {
+    customEvents = customEvents.map(e=>e.id===editingCustomId?ev:e);
+  } else {
+    customEvents.push(ev);
+  }
+
+  localStorage.setItem('pes_custom_events', JSON.stringify(customEvents));
+  closeModal();
+  updateMetrics();
+  renderWeek();
+  renderNeprog();
+}
+
+function showCustomDetail(id) {
+  const e = customEvents.find(x=>x.id===id);
+  if(!e) return;
+  showModal(`
+    <div class="modal-title">Intervenție custom</div>
+    <div class="fgrp"><label>Titlu</label><div style="font-size:13px;font-weight:500;padding:7px 10px;background:#f5f5f3;border-radius:8px">${e.title}</div></div>
+    <div class="fg2">
+      <div class="fgrp"><label>Data</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${e.date}</div></div>
+      <div class="fgrp"><label>Mecanic</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${e.mechanic||'—'}</div></div>
+    </div>
+    <div class="fgrp"><label>Locație</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${e.location||'—'}</div></div>
+    <div class="fgrp"><label>Observații</label><div style="font-size:13px;padding:7px 10px;background:#f5f5f3;border-radius:8px">${e.obs||'—'}</div></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      ${isSef?'<button class="btn btn-p" onclick="closeModal();editCustom(\''+e.id+'\')">Editează</button>':''}
+      ${isSef?'<button class="btn" style="color:#A32D2D;border-color:#A32D2D" onclick="closeModal();deleteCustom(\''+e.id+'\')">Șterge</button>':''}
+      <button class="btn" onclick="closeModal()">Închide</button>
+    </div>
+  `);
+}
+
+function editCustom(id) {
+  const e = customEvents.find(x=>x.id===id);
+  if(!e) return;
+  editingCustomId = id;
+  showModal(`
+    <div class="modal-title">Editează intervenție</div>
+    <div class="fgrp"><label>Titlu *</label><input type="text" id="c-title" value="${e.title}"></div>
+    <div class="fg2">
+      <div class="fgrp"><label>Data *</label><input type="date" id="c-date" value="${e.date}"></div>
+      <div class="fgrp"><label>Locație</label><input type="text" id="c-loc" value="${e.location||''}"></div>
+    </div>
+    <div class="fgrp"><label>Mecanic</label>
+      <select id="c-mech">
+        <option value="">— selectează —</option>
+        ${MECANICI.map(m=>`<option value="${m}" ${e.mechanic===m?'selected':''}>${m}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fgrp"><label>Observații</label><textarea id="c-obs">${e.obs||''}</textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-p" onclick="saveCustom()">Salvează</button>
+      <button class="btn" onclick="closeModal()">Anulează</button>
+    </div>
+  `);
+}
+
+function deleteCustom(id) {
+  if(!confirm('Ștergi această intervenție?')) return;
+  customEvents = customEvents.filter(e=>e.id!==id);
+  localStorage.setItem('pes_custom_events', JSON.stringify(customEvents));
+  updateMetrics(); renderWeek(); renderNeprog();
+}
+
+function showModal(html) {
+  document.getElementById('modal-area').innerHTML =
+    '<div class="modal-wrap"><div class="modal">'+html+'</div></div>';
+}
+
+function closeModal() {
+  document.getElementById('modal-area').innerHTML = '';
+}
+
+// Auto-detect role from URL
+const urlParams = new URLSearchParams(window.location.search);
+if(urlParams.get('role')) localStorage.setItem('pes_role', urlParams.get('role'));
+
+loadData();
+</script>
+</body>
+</html>
